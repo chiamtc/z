@@ -1,0 +1,43 @@
+{
+  "name": "code",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www",
+    "serve": " nodemon --exec babel-node src/index.js",
+    "db:down": "db-migrate down -c 2 --config ./database/database.json --migrations-dir ./database/migrations",
+    "db:person:up": "db-migrate up 20200305105632-person --config ./database/database.json --migrations-dir ./database/migrations",
+    "db:user:up": "db-migrate up 20200305120852-auth-user --config ./database/database.json --migrations-dir ./database/migrations"
+  },
+  "dependencies": {
+    "@babel/cli": "^7.7.4",
+    "@babel/core": "^7.7.4",
+    "@babel/node": "^7.8.7",
+    "@babel/parser": "^7.7.4",
+    "@babel/plugin-proposal-class-properties": "^7.7.4",
+    "@babel/plugin-proposal-object-rest-spread": "^7.7.4",
+    "@babel/plugin-proposal-throw-expressions": "^7.7.4",
+    "@babel/plugin-syntax-dynamic-import": "^7.7.4",
+    "@babel/plugin-transform-arrow-functions": "^7.7.4",
+    "@babel/plugin-transform-async-to-generator": "^7.7.4",
+    "@babel/plugin-transform-destructuring": "^7.7.4",
+    "@babel/plugin-transform-for-of": "^7.7.4",
+    "@babel/plugin-transform-runtime": "^7.7.4",
+    "@babel/plugin-transform-shorthand-properties": "^7.7.4",
+    "@babel/plugin-transform-spread": "^7.7.4",
+    "@babel/plugin-transform-template-literals": "^7.7.4",
+    "@babel/preset-env": "^7.8.7",
+    "async": "^3.2.0",
+    "db-migrate": "^0.11.6",
+    "db-migrate-pg": "^1.0.0",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "morgan": "~1.9.1",
+    "passport": "^0.4.1",
+    "pg": "^7.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
+}
