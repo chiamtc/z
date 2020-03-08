@@ -1,5 +1,5 @@
 {
     "default": "other",
-    "other": "postgres://postgres:postgres@localhost:5432/api",
+    "other": "postgres://chiamtc:postgres@localhost:5432/api",
     "sql-file": true
 }

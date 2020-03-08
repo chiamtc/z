@@ -1,7 +1,7 @@
-import express from 'express';
-const APIRouter = express.Router();
+import {Router} from 'express';
+const APIRouter = Router();
 
-import users from './users';
-APIRouter.use('/user', users);
+import AuthUserRouter from './auth_user';
+APIRouter.use('/user', AuthUserRouter);
 
 export default APIRouter;

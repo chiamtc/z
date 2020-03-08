@@ -12,5 +12,3 @@ create table person(
 
 alter table person alter column created_date set default now();
 alter table person alter column updated_date set default now();
-
-insert into person (first_name, last_name, email) values ('jim', 'carrey', 'jim.c@test.com');
