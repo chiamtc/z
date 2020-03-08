@@ -1,6 +1,5 @@
 const UserController = {
-    login: (req, res, next) => {
-        console.log('res', req);
+    login: (req, res, next) => {;
         res.status(200).json({status: 'logged in'})
     }
 }
