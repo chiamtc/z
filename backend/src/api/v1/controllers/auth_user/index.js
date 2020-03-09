@@ -27,7 +27,6 @@ AuthUserRouter.post('/signup', async (req, res) => {
         const salt = await bcrypt.genSalt(parseInt(process.env.SALT_ROUND));
         const password = await bcrypt.hash(body.password, salt);
         const query_values = [body.email, body.username, password, body.email];
-
         const query = `insert into auth_user (email, username, password)
                          select $1, $2, $3 where not exists (select * from auth_user where email= $4)
                          RETURNING auth_user_id, email, username, created_date, updated_date`;

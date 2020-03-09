@@ -8,7 +8,7 @@
     "db:down": "db-migrate down -c 2 --config ./database/database.json --migrations-dir ./database/migrations",
     "db:person:up": "db-migrate up 20200307143203-person --config ./database/database.json --migrations-dir ./database/migrations",
     "db:user:up": "db-migrate up 20200307143140-auth-user --config ./database/database.json --migrations-dir ./database/migrations",
-    "test:login": "jest src/test/api_test.test.js"
+    "test:login": "jest src/test/api_test.test.js --config jest.config.js"
   },
   "dependencies": {
     "@babel/cli": "^7.7.4",
@@ -44,6 +44,7 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
+    "jest": "^25.1.0",
     "mocha": "^7.1.0",
     "nodemon": "^2.0.2"
   }
