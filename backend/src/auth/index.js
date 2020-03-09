@@ -1,6 +1,6 @@
 import initializePassport from "./local_strategy";
 
-const AuthStrategy ={
+const AuthStrategy = {
     localStrategy: initializePassport
 };
 
