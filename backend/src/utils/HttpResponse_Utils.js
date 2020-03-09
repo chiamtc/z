@@ -20,8 +20,11 @@ export default class HttpResponse_Utils {
 
     responds(res) {
         const payload = {status: this.statusCode};
-        if (this.type === 'error') res.status(payload.status).json({...payload, message: this.message})
-        else res.status(payload.status).json({...payload, data: this.data});
+        if (this.type.toLowerCase().includes('error')) {
+            res.status(payload.status).json({...payload, message: this.message})
+        }else {
+            res.status(payload.status).json({...payload, data: this.data});
+        }
     }
 }
 /*

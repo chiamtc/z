@@ -32,12 +32,13 @@ AuthUserRouter.post('/signup', async (req, res) => {
                          RETURNING auth_user_id, email, username, created_date, updated_date`;
 
         const searchUser_Q = await client.query(query, query_values);
-        if (searchUser_Q.rows.length === 0) ResponseUtil.setSuccess(200, ResponseFlag.USER_EXISTS_IN_DATABASE);
+        if (searchUser_Q.rows.length === 0) ResponseUtil.setFailure(500,'api_error', ResponseFlag.USER_EXISTS_IN_DATABASE);
         else ResponseUtil.setSuccess(201, searchUser_Q.rows[0]);
 
         ResponseUtil.responds(res);
     } catch (e) {
-        throw new ErrorHandler(500, 'error', e.message)
+        ResponseUtil.setFailure(500,'internal_error', 'serious shit');
+        ResponseUtil.responds(res);
     }
 });
 
@@ -45,8 +46,8 @@ AuthUserRouter.post('/login', passport.authenticate('login', {
     session: false,
     failWithError: true
 }), (req, res) => {
-    ResponseUtil.setSuccess(200, req.user);
-    ResponseUtil.responds(res);
+    //dont use responseutil , not sure why it gets called twice :\
+    res.status(200).json({status:200, payload:req.user})
 });
 
 export default AuthUserRouter;

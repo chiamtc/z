@@ -3,7 +3,7 @@ import HttpResponse_Utils from "./HttpResponse_Utils";
 const ResponseUtil = new HttpResponse_Utils();
 const handlerError = (err, res) => {
     const {type, statusCode, message} = err;
-    ResponseUtil.setFailure(statusCode ||500, type, message);
+    ResponseUtil.setFailure(statusCode || err.status, type || err.name, message);
     ResponseUtil.responds(res);
 };
 
