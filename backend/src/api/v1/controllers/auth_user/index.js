@@ -1,15 +1,15 @@
 import {Router} from 'express';
-import passport from 'passport';
 import db from '../../../../db'
 import HttpResponse_Utils from "../../../../utils/HttpResponse_Utils";
 import HttpRequest_Utils from "../../../../utils/HttpRequest_Utils";
 import {ErrorHandler} from "../../../../utils/ErrorHandler";
 import ResponseFlag from "../../../../constants/response_flag";
 import bcrypt from 'bcrypt';
+import {authenticate_loginStrategy} from "../../../../auth/local_strategy_utils";
 
 const AuthUserRouter = Router();
-const ResponseUtil = new HttpResponse_Utils();
 const RequestUtil = new HttpRequest_Utils();
+const ResponseUtil = new HttpResponse_Utils();
 
 AuthUserRouter.get('/', async (req, res) => {
     res.status(200).json({status: '/users is working'})
@@ -20,34 +20,54 @@ AuthUserRouter.get('/error', (req, res) => {
 });
 
 AuthUserRouter.post('/signup', async (req, res) => {
+    const client = await db.client();
     try {
-        const client = await db.client();
         RequestUtil.extract_request_header(req);
         const body = RequestUtil.body;
+        await client.query('begin');
+        const createUser_Q = await create_newUser(client, body);
+        if (createUser_Q.rows.length === 0) ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, ResponseFlag.USER_EXISTS_IN_DATABASE);
+        else {
+            const {auth_user_id, email} = createUser_Q.rows[0];
+            const createPerson_Q = await create_newPerson(client, {...body, email, auth_user_id})
+            ResponseUtil.setResponse(201, ResponseFlag.OK, createPerson_Q.rows[0]);
+        }
+        await client.query('commit');
+        ResponseUtil.responds(res);
+    } catch (e) {
+        await client.query('rollback');
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, 'serious shit');
+        ResponseUtil.responds(res);
+    } finally {
+        client.release();
+    }
+});
+
+const create_newUser = async (client, body) => {
+    try {
         const salt = await bcrypt.genSalt(parseInt(process.env.SALT_ROUND));
         const password = await bcrypt.hash(body.password, salt);
         const query_values = [body.email, body.username, password, body.email];
         const query = `insert into auth_user (email, username, password)
                          select $1, $2, $3 where not exists (select * from auth_user where email= $4)
                          RETURNING auth_user_id, email, username, created_date, updated_date`;
-
-        const searchUser_Q = await client.query(query, query_values);
-        if (searchUser_Q.rows.length === 0) ResponseUtil.setFailure(500,'api_error', ResponseFlag.USER_EXISTS_IN_DATABASE);
-        else ResponseUtil.setSuccess(201, searchUser_Q.rows[0]);
-
-        ResponseUtil.responds(res);
+        return await client.query(query, query_values);
     } catch (e) {
-        ResponseUtil.setFailure(500,'internal_error', 'serious shit');
-        ResponseUtil.responds(res);
+        await client.query('rollback');
     }
-});
+};
 
-AuthUserRouter.post('/login', passport.authenticate('login', {
-    session: false,
-    failWithError: true
-}), (req, res) => {
-    //dont use responseutil , not sure why it gets called twice :\
-    res.status(200).json({status:200, payload:req.user})
-});
+const create_newPerson = async (client, body) => {
+    try {
+        const query_values = [body.auth_user_id, body.firstName, body.lastName, body.email];
+        const query = `insert into person (auth_user_id, first_name, last_name, email)
+                         values($1, $2, $3, $4) RETURNING *`;
+        return await client.query(query, query_values);
+    } catch (e) {
+        await client.query('rollback');
+    }
+};
+
+AuthUserRouter.post('/login', authenticate_loginStrategy);
 
 export default AuthUserRouter;

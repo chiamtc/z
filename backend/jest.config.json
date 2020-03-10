@@ -1,0 +1,8 @@
+{
+    "coverageDirectory": "./src/test",
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+        "<rootDir>/src/api/v1",
+        "<rootDir>/src/auth"
+    ]
+}

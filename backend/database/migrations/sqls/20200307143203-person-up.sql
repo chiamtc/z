@@ -6,8 +6,7 @@ create table person(
     created_date timestamptz,
     updated_date timestamptz,
     email varchar(255) unique,
-    foreign key(auth_user_id) references auth_user(auth_user_id),
-    foreign key(email) references auth_user(primary_email)
+    foreign key(auth_user_id) references auth_user(auth_user_id)
 );
 
 alter table person alter column created_date set default now();
