@@ -2,7 +2,6 @@ import {Router} from 'express';
 import db from '../../../../db'
 import HttpResponse_Utils from "../../../../utils/HttpResponse_Utils";
 import HttpRequest_Utils from "../../../../utils/HttpRequest_Utils";
-import {ErrorHandler} from "../../../../utils/ErrorHandler";
 import ResponseFlag from "../../../../constants/response_flag";
 import bcrypt from 'bcrypt';
 import {authenticate_loginStrategy} from "../../../../auth/local_strategy_utils";
@@ -15,28 +14,24 @@ AuthUserRouter.get('/', async (req, res) => {
     res.status(200).json({status: '/users is working'})
 });
 
-AuthUserRouter.get('/error', (req, res) => {
-    throw new ErrorHandler(500, 'error', 'error message')
-});
-
 AuthUserRouter.post('/signup', async (req, res) => {
     const client = await db.client();
     try {
         RequestUtil.extract_request_header(req);
         const body = RequestUtil.body;
         await client.query('begin');
-        const createUser_Q = await create_newUser(client, body);
-        if (createUser_Q.rows.length === 0) ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, ResponseFlag.USER_EXISTS_IN_DATABASE);
+        const createUser_R = await create_newUser(client, body);
+        if (createUser_R.rows.length === 0) ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, ResponseFlag.USER_EXISTS_IN_DATABASE);
         else {
-            const {auth_user_id, email} = createUser_Q.rows[0];
-            const createPerson_Q = await create_newPerson(client, {...body, email, auth_user_id})
-            ResponseUtil.setResponse(201, ResponseFlag.OK, createPerson_Q.rows[0]);
+            const {auth_user_id, email} = createUser_R.rows[0];
+            const createPerson_R = await create_newPerson(client, {...body, email, auth_user_id})
+            ResponseUtil.setResponse(201, ResponseFlag.OK, createPerson_R.rows[0]);
         }
         await client.query('commit');
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, 'serious shit');
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `${res.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE}`);
         ResponseUtil.responds(res);
     } finally {
         client.release();
@@ -69,5 +64,13 @@ const create_newPerson = async (client, body) => {
 };
 
 AuthUserRouter.post('/login', authenticate_loginStrategy);
+
+AuthUserRouter.put('/:id', (req,res,next)=>{
+    //TODO: update email on auth_user and person
+});
+
+AuthUserRouter.put('password/:id', (req,res,next)=>{
+    //TODO: update password on auth_user;
+})
 
 export default AuthUserRouter;

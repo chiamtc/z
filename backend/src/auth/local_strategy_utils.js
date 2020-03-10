@@ -14,7 +14,6 @@ export const authenticate_jwtStrategy = (req, res, next) => {
             req.user = user;
             next();
         }
-
     })(req, res, next)
 }
 

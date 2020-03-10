@@ -7,7 +7,9 @@ const ResponseFlag = {
     OK:'ok',
     AUTH_ERROR :'auth_error',
     INTERNAL_ERROR:'internal_error',
-    API_ERROR:'api_error'
+    API_ERROR:'api_error',
+    API_ERROR_MESSAGE:'experiences development issue',
+    OBJECT_NOT_FOUND:'Object not found'
 };
 
 export default ResponseFlag;
