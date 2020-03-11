@@ -32,7 +32,7 @@ const initializePassport = (passport) => {
                 await client.query('rollback');
                 return done(null, false, {message: "Invalid ?"})
             } finally {
-                client.release()
+                await client.release();
             }
         }
     ));
@@ -43,7 +43,10 @@ const initializePassport = (passport) => {
     }, async (jwt_payload, done) => {
         try {
             const searchUser_Q_values = [jwt_payload.auth_user_id];
-            const searchUser_Q = ` select * from auth_user where auth_user_id = $1`;
+            const searchUser_Q = `select p.person_id, p.auth_user_id, p.first_name, p.last_name, a.email, a.username, p.created_date, p.updated_date 
+                                  from person p inner join auth_user a 
+                                  on a.auth_user_id= p.auth_user_id
+                                  where a.auth_user_id=$1`;
             const {rows} = await db.query(searchUser_Q, searchUser_Q_values);
             done(null, rows[0]);
         } catch (e) {

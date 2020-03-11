@@ -10,6 +10,9 @@ create table person(
     foreign key(auth_user_id) references auth_user(auth_user_id)
 );
 
+create index first_name_index on person (first_name);
+create index last_name_index on person (last_name);
+
 alter table person alter column created_date set default now();
 alter table person alter column updated_date set default now();
 

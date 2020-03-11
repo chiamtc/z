@@ -29,10 +29,10 @@ PersonRouter.get('/me', authenticate_jwtStrategy, async (req, res, next) => {
         ResponseUtil.setResponse(200, ResponseFlag.OK, payload);
         ResponseUtil.responds(res);
     } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE}`);
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
-        client.release();
+        await client.release();
     }
 });
 
@@ -52,10 +52,10 @@ PersonRouter.get('/:id', authenticate_jwtStrategy, async (req, res, next) => {
             ResponseUtil.responds(res);
         }
     } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE}`);
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
-        client.release();
+        await client.release();
     }
 });
 
@@ -93,10 +93,10 @@ PersonRouter.put('/me', authenticate_jwtStrategy, async (req, res, next) => {
         }
     } catch (e) {
         await client.query('rollback');
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE}`);
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
-        client.release();
+        await client.release();
     }
 });
 
