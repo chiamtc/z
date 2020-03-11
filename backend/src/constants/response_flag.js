@@ -9,7 +9,8 @@ const ResponseFlag = {
     INTERNAL_ERROR:'internal_error',
     API_ERROR:'api_error',
     API_ERROR_MESSAGE:'experiences development issue',
-    OBJECT_NOT_FOUND:'Object not found'
+    OBJECT_NOT_FOUND:'Object not found',
+    OBJECT_NOT_UPDATED:'Object was not updated '
 };
 
 export default ResponseFlag;

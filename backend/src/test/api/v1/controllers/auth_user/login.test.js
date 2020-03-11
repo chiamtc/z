@@ -12,12 +12,13 @@ chai.use(chaiHttp);
 describe('tests /login endpoint', () => {
     beforeAll(async (done) => {
         await exec('npm run db:down');
+        await exec('npm run db:general:up');
         await exec('npm run db:user:up');
         await exec('npm run db:person:up');
 
         chai.request('localhost:3000')
             .post('/api/v1/users/signup')
-            .send({email: c.email, username: c.username, password: c.password, firstName:c.firstName, lastName:c.lastName})
+            .send({email: c.email, username: c.username, password: c.password, first_name:c.firstName, last_name:c.lastName})
             .end((err, res) => {
                 console.log(_.isEmpty(res.body) ? null : 'user signed up successfully in login test beforeAll hook')
                 done();

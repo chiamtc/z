@@ -10,3 +10,9 @@ create table auth_user(
 alter table auth_user alter column created_date set default now();
 alter table auth_user alter column updated_date set default now();
 alter table auth_user alter column last_login set default now();
+
+-- trigger to trigger update_timestamp function when there's an update
+create trigger trigger_person_updated_date
+before update on auth_user
+for each row
+execute procedure update_timestamp();

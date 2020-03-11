@@ -5,13 +5,14 @@
   "scripts": {
     "start": "node ./bin/www",
     "serve": " nodemon --exec babel-node src/index.js",
-    "db:down": "db-migrate down -c 2 --config ./database/database.json --migrations-dir ./database/migrations",
-    "db:person:up": "db-migrate up 20200307143203-person --config ./database/database.json --migrations-dir ./database/migrations",
-    "db:user:up": "db-migrate up 20200307143140-auth-user --config ./database/database.json --migrations-dir ./database/migrations",
+    "db:down": "db-migrate down -c 3 --config ./database/database.json --migrations-dir ./database/migrations",
+    "db:general:up": "db-migrate up 20200311004346-general --config ./database/database.json --migrations-dir ./database/migrations",
+    "db:user:up": "db-migrate up 20200311004401-auth-user --config ./database/database.json --migrations-dir ./database/migrations",
+    "db:person:up": "db-migrate up 20200311004406-person --config ./database/database.json --migrations-dir ./database/migrations",
     "test:signup": "jest src/test/api/v1/controllers/auth_user/signup.test.js --config jest.config.json",
     "test:login": "jest src/test/api/v1/controllers/auth_user/login.test.js --config jest.config.json",
     "test:me": "jest src/test/api/v1/controllers/person/me.test.js --config jest.config.json",
-    "test:person": "jest src/test/api/v1/controllers/person/get.test.js --config jest.config.json"
+    "test:person": "jest src/test/api/v1/controllers/person/person.test.js --config jest.config.json"
   },
   "dependencies": {
     "@babel/cli": "^7.7.4",

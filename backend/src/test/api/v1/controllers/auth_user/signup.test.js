@@ -11,6 +11,7 @@ chai.use(chaiHttp);
 describe('tests /signup endpoint', () => {
     beforeAll(async () => {
         await exec('npm run db:down');
+        await exec('npm run db:general:up');
         await exec('npm run db:user:up');
         await exec('npm run db:person:up');
     });
@@ -22,8 +23,8 @@ describe('tests /signup endpoint', () => {
                 email: c.email,
                 username: c.username,
                 password: c.password,
-                firstName: c.firstName,
-                lastName: c.lastName
+                first_name: c.firstName,
+                last_name: c.lastName
             })
             .end((err, res) => {
                 const body = res.body.data;

@@ -1,3 +1,4 @@
+
 create table person(
     person_id serial primary key,
     auth_user_id int unique,
@@ -11,3 +12,9 @@ create table person(
 
 alter table person alter column created_date set default now();
 alter table person alter column updated_date set default now();
+
+-- trigger to trigger update_timestamp function when there's an update
+create trigger trigger_auth_user_updated_date
+before update on person
+for each row
+execute procedure update_timestamp();

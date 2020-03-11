@@ -9,10 +9,11 @@ import ResponseFlag from "../../../../../constants/response_flag";
 
 chai.use(chaiHttp);
 
-describe('tests /me endpoint', () => {
+describe('tests users/id endpoint', () => {
     let accessToken;
     beforeAll(async (done) => {
         await exec('npm run db:down');
+        await exec('npm run db:general:up');
         await exec('npm run db:user:up');
         await exec('npm run db:person:up');
 
@@ -22,8 +23,8 @@ describe('tests /me endpoint', () => {
                 email: c.email,
                 username: c.username,
                 password: c.password,
-                firstName: c.firstName,
-                lastName: c.lastName
+                first_name: c.firstName,
+                last_name: c.lastName
             })
             .end((err, res) => {
                 console.log(_.isEmpty(res.body) ? null : 'user signed up successfully in login test beforeAll hook')
@@ -84,9 +85,9 @@ describe('tests /me endpoint', () => {
             })
     });
 
-    it('GET /me fails due to absence of jwt token', (done) => {
+    it('GET /:id fails due to absence of jwt token', (done) => {
         chai.request('localhost:3000')
-            .get('/api/v1/persons/me')
+            .get('/api/v1/persons/1')
             .end((err, res) => {
                 assert.equal(res.body.status, 500);
                 assert.equal(res.body.message, ResponseFlag.JWT_TOKEN_ERROR);

@@ -54,7 +54,7 @@ const create_newUser = async (client, body) => {
 
 const create_newPerson = async (client, body) => {
     try {
-        const query_values = [body.auth_user_id, body.firstName, body.lastName, body.email];
+        const query_values = [body.auth_user_id, body.first_name, body.last_name, body.email];
         const query = `insert into person (auth_user_id, first_name, last_name, email)
                          values($1, $2, $3, $4) RETURNING *`;
         return await client.query(query, query_values);
@@ -65,11 +65,11 @@ const create_newPerson = async (client, body) => {
 
 AuthUserRouter.post('/login', authenticate_loginStrategy);
 
-AuthUserRouter.put('/:id', (req,res,next)=>{
+AuthUserRouter.put('/email', (req, res, next) => {
     //TODO: update email on auth_user and person
 });
 
-AuthUserRouter.put('password/:id', (req,res,next)=>{
+AuthUserRouter.put('password', (req, res, next) => {
     //TODO: update password on auth_user;
 })
 
