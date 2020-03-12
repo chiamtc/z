@@ -1,0 +1,11 @@
+drop table project_participant; drop table project; drop table person; drop table auth_user; drop table migrations; drop function update_timestamp();
+drop table project; drop table person; drop table auth_user; drop table migrations; drop function update_timestamp();
+
+
+//to list all the enum
+select enum_range(null::color_t) 
+or
+\dT+ <enum_name> in psql
+
+//edit
+ALTER TABLE job ALTER COLUMN job_status TYPE status_enum USING status::text::status_enum;

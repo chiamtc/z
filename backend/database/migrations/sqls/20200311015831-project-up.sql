@@ -3,14 +3,16 @@ create table project(
     project_name varchar(255) not null,
     project_desc text,
     project_type varchar(255) not null,
-    project_lead int unique not null,
+    project_lead int not null,
     created_date timestamptz,
-    updated_date timestamptz,
-    foreign key(project_lead) references person(person_id)
+    updated_date timestamptz
 );
 
-alter table person alter column created_date set default now();
-alter table person alter column updated_date set default now();
+alter table project alter column created_date set default now();
+alter table project alter column updated_date set default now();
+
+--use enum type
+ALTER TABLE project ALTER COLUMN project_type TYPE project_type_enum USING project_type::text::project_type_enum;
 
 -- trigger to trigger update_timestamp function when there's an update
 create trigger trigger_project_updated_date

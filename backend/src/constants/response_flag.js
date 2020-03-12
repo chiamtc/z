@@ -8,7 +8,7 @@ const ResponseFlag = {
     AUTH_ERROR :'auth_error',
     INTERNAL_ERROR:'internal_error',
     API_ERROR:'api_error',
-    API_ERROR_MESSAGE:'experiences development issue',
+    API_ERROR_MESSAGE:'experiences issue',
     OBJECT_NOT_FOUND:'Object not found',
     OBJECT_NOT_UPDATED:'Object was not updated '
 };

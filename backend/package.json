@@ -14,7 +14,8 @@
     "test:signup": "jest src/test/api/v1/controllers/auth_user/signup.test.js --config jest.config.json",
     "test:login": "jest src/test/api/v1/controllers/auth_user/login.test.js --config jest.config.json",
     "test:me": "jest src/test/api/v1/controllers/person/me.test.js --config jest.config.json",
-    "test:person": "jest src/test/api/v1/controllers/person/person.test.js --config jest.config.json"
+    "test:person": "jest src/test/api/v1/controllers/person/person.test.js --config jest.config.json",
+    "test:project": "jest src/test/api/v1/controllers/project/project.test.js --config jest.config.json"
   },
   "dependencies": {
     "@babel/cli": "^7.7.4",

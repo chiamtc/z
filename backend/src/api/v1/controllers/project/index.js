@@ -1,5 +1,4 @@
 import {Router} from 'express';
-import passport from 'passport';
 import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
 import HttpResponse_Utils from "../../../../utils/HttpResponse_Utils";
 import HttpRequest_Utils from "../../../../utils/HttpRequest_Utils";
@@ -11,6 +10,84 @@ const ProjectRouter = Router();
 const ResponseUtil = new HttpResponse_Utils();
 const RequestUtil = new HttpRequest_Utils();
 
+ProjectRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
+    const client = await db.client();
+    try {
+        RequestUtil.extract_request_header(req);
+        const body = RequestUtil.body;
+        await client.query('begin');
+
+
+        const createProject_Q_values = [body.project_name, body.project_desc, body.project_type, req.user.person_id];
+        const createProject_Q = `insert into project(project_name, project_desc, project_type, project_lead) values($1, $2, $3, $4) returning *`;
+        const createProject_R = await client.query(createProject_Q, createProject_Q_values);
+
+        const updateProjParti_Q_values = [parseInt(createProject_R.rows[0].project_id), parseInt(req.user.person_id)];
+        const updateProjParti_Q = `insert into project_participant(project_id, participant_id) values($1, $2)`;
+        const updateProjParti_R = await client.query(updateProjParti_Q, updateProjParti_Q_values);
+        const response = {
+            ...createProject_R.rows[0],
+            first_name: req.user.first_name,
+            last_name: req.user.last_name
+        };
+        await client.query('commit');
+        ResponseUtil.setResponse(200, ResponseFlag.OK, response);
+        ResponseUtil.responds(res);
+    } catch (e) {
+        await client.query('rollback');
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE}. Error: ${e}`);
+        ResponseUtil.responds(res);
+    } finally {
+        await client.release();
+    }
+});
+
+ProjectRouter.get('/', authenticate_jwtStrategy, async (req, res) => {
+    const {auth_user_id, person_id} = req.user;
+    let queryLimit = 5, queryOffset = 0;
+    const client = await db.client();
+    try {
+        if (req.query.hasOwnProperty('limit')) {
+            const {limit} = req.query;
+            queryLimit = parseInt(limit);
+            if (queryLimit <= 0) {
+                ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: query limit must be more than equal 1`);
+                ResponseUtil.responds(res);
+            }
+        }
+        if (req.query.hasOwnProperty('offset')) {
+            const {offset} = req.query;
+            queryOffset = parseInt(offset);
+        }
+    } catch (e) {
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: ${e.message}`);
+        ResponseUtil.responds(res);
+    }
+
+    try {
+        await client.query('begin');
+        let getProject_Q_values = [req.user.person_id, queryLimit, queryOffset];
+        console.log(getProject_Q_values)
+        const getProjects_Q = `select * from project p inner join project_participant pp on p.project_id = pp.project_id and pp.participant_id = $1 limit $2 offset $3`;
+        const getProjects_R = await client.query(getProjects_Q, getProject_Q_values);
+
+        const getCount_Q = `select COUNT(*) from project p inner join project_participant pp on p.project_id = pp.project_id and pp.participant_id = $1`;
+        const getCount_R = await client.query(getCount_Q, [getProject_Q_values[0]]);
+
+        const total_count = parseInt(getCount_R.rows[0].count);
+        const has_more = queryLimit * (queryOffset + 1) < total_count;
+        await client.query('commit');
+
+        ResponseUtil.setResponse(200, ResponseFlag.OK, {projects: getProjects_R.rows, total_count, has_more});
+        ResponseUtil.responds(res);
+    } catch (e) {
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.responds(res);
+    } finally {
+        await client.release();
+    }
+});
+
 //this endpoint should not be consumed at all
 ProjectRouter.get('/all', authenticate_jwtStrategy, async (req, res) => {
     let queryLimit = 5, queryOffset = 0;
@@ -20,7 +97,7 @@ ProjectRouter.get('/all', authenticate_jwtStrategy, async (req, res) => {
             const {limit} = req.query;
             queryLimit = parseInt(limit);
             if (queryLimit <= 0) {
-                ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.baseUrl} - Sanitizing Process: query limit must be more than equal 1`);
+                ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: query limit must be more than equal 1`);
                 ResponseUtil.responds(res);
             }
         }
@@ -29,7 +106,7 @@ ProjectRouter.get('/all', authenticate_jwtStrategy, async (req, res) => {
             queryOffset = parseInt(offset);
         }
     } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.baseUrl} - Sanitizing Process: ${e.message}`);
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: ${e.message}`);
         ResponseUtil.responds(res);
     }
 
@@ -49,39 +126,11 @@ ProjectRouter.get('/all', authenticate_jwtStrategy, async (req, res) => {
         ResponseUtil.setResponse(200, ResponseFlag.OK, {projects: getProjects_R.rows, total_count, has_more});
         ResponseUtil.responds(res);
     } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
         await client.release();
     }
-});
-
-ProjectRouter.post('/', authenticate_jwtStrategy, async(req,res)=>{
-    const client = db.client();
-    try{
-        RequestUtil.extract_request_header(req);
-        const body = ResponseUtil.body;
-        await client.query('begin');
-        //TODO: db-migrate create project_participant sql
-        //TODO: insert project query
-
-        //TODO: insert project_participant query
-
-        await client.query('commit');
-    }catch(e){
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
-        ResponseUtil.responds(res);
-    }finally{
-        await client.release();
-    }
-
-})
-
-
-ProjectRouter.get('/', authenticate_jwtStrategy, (req, res) => {
-    const {auth_user_id, person_id} = req.user;
-
-
 });
 
 export default ProjectRouter

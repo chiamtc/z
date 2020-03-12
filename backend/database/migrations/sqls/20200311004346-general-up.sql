@@ -5,3 +5,5 @@ begin
     return new;
 end;
 $$ LANGUAGE plpgsql;
+
+create type project_type_enum as enum('software_development');
