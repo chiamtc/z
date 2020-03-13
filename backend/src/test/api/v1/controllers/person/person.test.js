@@ -85,6 +85,18 @@ describe('tests users/id endpoint', () => {
             })
     });
 
+    it('GET /:id  fails by sending not a number in query params', (done) => {
+        chai.request('localhost:3000')
+            .get('/api/v1/persons/abc')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .end((err, res) => {
+                console.log(res.body);
+                assert.equal(res.body.status, 500);
+                assert.isNotEmpty(res.body.message);
+                done();
+            });
+    });
+
     it('GET /:id fails due to absence of jwt token', (done) => {
         chai.request('localhost:3000')
             .get('/api/v1/persons/1')

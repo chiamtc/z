@@ -10,6 +10,7 @@ const ResponseFlag = {
     API_ERROR:'api_error',
     API_ERROR_MESSAGE:'experiences issue',
     OBJECT_NOT_FOUND:'Object not found',
+    OBJECT_NOT_DELETED:'Object not deleted',
     OBJECT_NOT_UPDATED:'Object was not updated '
 };
 

@@ -4,6 +4,7 @@ import HttpResponse_Utils from "../../../../utils/HttpResponse_Utils";
 import HttpRequest_Utils from "../../../../utils/HttpRequest_Utils";
 import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
+import Sanitizer from "../../../../utils/Sanitizer";
 
 const ProjectRouter = Router();
 
@@ -88,6 +89,71 @@ ProjectRouter.get('/', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
+ProjectRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
+    const client = await db.client();
+    let deleteProject_Q_values = [];
+    try {
+        const {id} = req.params;
+        deleteProject_Q_values.push(parseInt(id));
+    } catch (e) {
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: ${e.message}`);
+        ResponseUtil.responds(res);
+    }
+
+    try {
+        RequestUtil.extract_request_header(req);
+        const body = RequestUtil.body;
+        await client.query('begin');
+
+        const deleteProjParti_Q = `delete from project_participant where project_id=$1`;
+        const deleteProjParti_R = await client.query(deleteProjParti_Q, deleteProject_Q_values);
+
+        const deleteProject_Q = `delete from project where project_id=$1 returning *`;
+        const deleteProject_R = await client.query(deleteProject_Q, deleteProject_Q_values);
+        await client.query('commit');
+        if (deleteProject_R.rows.length !== 0) {
+            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true, projects: deleteProject_R.rows[0]});
+        } else {
+            ResponseUtil.setResponse(200, ResponseFlag.OK, ResponseFlag.OBJECT_NOT_DELETED);
+        }
+        ResponseUtil.responds(res);
+    } catch (e) {
+        await client.query('rollback');
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE}. Error: ${e}`);
+        ResponseUtil.responds(res);
+    } finally {
+        await client.release();
+    }
+});
+
+ProjectRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
+    let f;
+    const client = await db.client();
+
+    const {id} = req.params;
+    const SanitizerUtil = new Sanitizer();
+
+    const updateProject_ref = new Map();
+    updateProject_ref.set('project_name', 'project_name');
+    updateProject_ref.set('project_desc', 'project_desc');
+    updateProject_ref.set('project_lead', 'project_lead');
+    try {
+        SanitizerUtil.sanitize_reference = updateProject_ref;
+        SanitizerUtil.sanitize_request(req.body);
+        f = SanitizerUtil.build_query();
+        const updateProject_Q_values = [...f.query_val, id]
+        const updateProject_Q = `update project set ${f.query_string} where project_id=$${updateProject_Q_values.length} returning *`;
+        const updateProject_R = await client.query(updateProject_Q, updateProject_Q_values);
+        ResponseUtil.setResponse(200, ResponseFlag.OK, updateProject_R.rows[0]);
+        ResponseUtil.responds(res);
+    } catch (e) {
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: ${e.message}`);
+        ResponseUtil.responds(res);
+    } finally {
+        await client.release();
+    }
+});
+
 //this endpoint should not be consumed at all
 ProjectRouter.get('/all', authenticate_jwtStrategy, async (req, res) => {
     let queryLimit = 5, queryOffset = 0;
@@ -133,4 +199,4 @@ ProjectRouter.get('/all', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-export default ProjectRouter
+export default ProjectRouter;
