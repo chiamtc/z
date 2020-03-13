@@ -9,7 +9,7 @@ import ResponseFlag from "../../../../../constants/response_flag";
 
 chai.use(chaiHttp);
 
-describe('tests users/id endpoint', () => {
+describe('tests person/id endpoint', () => {
     let accessToken;
     beforeAll(async (done) => {
         await exec('npm run db:down');

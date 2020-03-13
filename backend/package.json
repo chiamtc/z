@@ -11,11 +11,13 @@
     "db:person:up": "db-migrate up 20200311004406-person --config ./database/database.json --migrations-dir ./database/migrations",
     "db:project:up": "db-migrate up 20200311015831-project --config ./database/database.json --migrations-dir ./database/migrations",
     "db:proj_parti:up": "db-migrate up 20200311070018-project-participant --config ./database/database.json --migrations-dir ./database/migrations",
+    "db:issue:up": "db-migrate up 20200313020117-issue-up --config ./database/database.json --migrations-dir ./database/migrations",
     "test:signup": "jest src/test/api/v1/controllers/auth_user/signup.test.js --config jest.config.json",
     "test:login": "jest src/test/api/v1/controllers/auth_user/login.test.js --config jest.config.json",
     "test:me": "jest src/test/api/v1/controllers/person/me.test.js --config jest.config.json",
     "test:person": "jest src/test/api/v1/controllers/person/person.test.js --config jest.config.json",
-    "test:project": "jest src/test/api/v1/controllers/project/project.test.js --config jest.config.json"
+    "test:project": "jest src/test/api/v1/controllers/project/project.test.js --config jest.config.json",
+    "test:issue": "jest src/test/api/v1/controllers/issue/issue.test.js --config jest.config.json"
   },
   "dependencies": {
     "@babel/cli": "^7.7.4",

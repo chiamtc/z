@@ -140,7 +140,7 @@ ProjectRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
     try {
         SanitizerUtil.sanitize_reference = updateProject_ref;
         SanitizerUtil.sanitize_request(req.body);
-        f = SanitizerUtil.build_query();
+        f = SanitizerUtil.build_update_query();
         const updateProject_Q_values = [...f.query_val, id]
         const updateProject_Q = `update project set ${f.query_string} where project_id=$${updateProject_Q_values.length} returning *`;
         const updateProject_R = await client.query(updateProject_Q, updateProject_Q_values);

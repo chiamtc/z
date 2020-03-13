@@ -8,7 +8,7 @@ import * as c from '../../../../utils/constants'
 import ResponseFlag from "../../../../../constants/response_flag";
 
 chai.use(chaiHttp);
-describe('tests /me endpoint', () => {
+describe('tests /project endpoint', () => {
     let accessToken;
     beforeAll(async (done) => {
         await exec('npm run db:down');

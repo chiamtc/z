@@ -14,10 +14,19 @@ export default class Sanitizer {
         });
     }
 
-    build_query() {
+    build_update_query() {
         this._sanitized_array.map((e, i) => {
             const prop = Object.entries(e)[0];
             this._query_string += `${this._sanitize_reference.get(prop[0])}=$${i + 1}${i === this._sanitized_array.length - 1 ? '' : ', '}`; //produces db_name=$x with ' ' or ',' depending on position
+            this._query_val.push(prop[1]);
+        });
+        return {query_string: this.query_string, query_val:this.query_val};
+    }
+
+    build_create_query(){
+        this._sanitized_array.map((e, i) => {
+            const prop = Object.entries(e)[0];
+            this._query_string += `${this._sanitize_reference.get(prop[0])}${i === this._sanitized_array.length - 1 ? '' : ', '}`; //produces db_name=$x with ' ' or ',' depending on position
             this._query_val.push(prop[1]);
         });
         return {query_string: this.query_string, query_val:this.query_val};

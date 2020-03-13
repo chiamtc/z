@@ -72,7 +72,7 @@ PersonRouter.put('/me', authenticate_jwtStrategy, async (req, res, next) => {
     try {
         SanitizerUtil.sanitize_reference = updateMe_ref;
         SanitizerUtil.sanitize_request(req.body);
-        f = SanitizerUtil.build_query();
+        f = SanitizerUtil.build_update_query();
     } catch (e) {
         ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: ${e.message}`);
         ResponseUtil.responds(res);
