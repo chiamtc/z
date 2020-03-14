@@ -14,22 +14,37 @@ export default class Sanitizer {
         });
     }
 
-    build_update_query() {
+    build_query(ops) {
         this._sanitized_array.map((e, i) => {
-            const prop = Object.entries(e)[0];
-            this._query_string += `${this._sanitize_reference.get(prop[0])}=$${i + 1}${i === this._sanitized_array.length - 1 ? '' : ', '}`; //produces db_name=$x with ' ' or ',' depending on position
-            this._query_val.push(prop[1]);
+            //console.log('e',e);//{projectType: 'new project'}
+            const prop = Object.entries(e)[0]; //[ ['projectType', 'new project']  .. ]
+            const propType = this._sanitize_reference.get(prop[0]); //d , f or s
+            let propValue;
+            switch (propType) {
+                case 'd':
+                    propValue = parseInt(prop[1]);
+                    break;
+                case 's':
+                    propValue = prop[1];
+                    break;
+                case 'f':
+                    propValue = parseFloat(prop[1]);
+                    break;
+            }
+
+            this._query_string += ops === 'put' ?
+                `${prop[0]}=$${i + 1}${i === this._sanitized_array.length - 1 ? '' : ', '}` :
+                `${prop[0]}${i === this._sanitized_array.length - 1 ? '' : ', '}`;
+            //produces db_name=$x with ' ' or ',' depending on position
+            this._query_val.push(propValue);
         });
-        return {query_string: this.query_string, query_val:this.query_val};
+        return {query_string: this.query_string, query_val: this.query_val};
     }
 
-    build_create_query(){
-        this._sanitized_array.map((e, i) => {
-            const prop = Object.entries(e)[0];
-            this._query_string += `${this._sanitize_reference.get(prop[0])}${i === this._sanitized_array.length - 1 ? '' : ', '}`; //produces db_name=$x with ' ' or ',' depending on position
-            this._query_val.push(prop[1]);
-        });
-        return {query_string: this.query_string, query_val:this.query_val};
+    build_values(values_array) {
+        let insert_val = '';
+        values_array.map((e, i) => insert_val += i === values_array.length - 1 ? `$${i + 1}` : `$${i + 1}, `);
+        return insert_val;
     }
 
     get sanitize_reference() {

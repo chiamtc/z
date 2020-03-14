@@ -5,6 +5,7 @@ import HttpRequest_Utils from "../../../../utils/HttpRequest_Utils";
 import ResponseFlag from "../../../../constants/response_flag";
 import bcrypt from 'bcrypt';
 import {authenticate_loginStrategy} from "../../../../auth/local_strategy_utils";
+import Sanitizer from "../../../../utils/Sanitizer";
 
 const AuthUserRouter = Router();
 const RequestUtil = new HttpRequest_Utils();
@@ -54,9 +55,10 @@ const create_newUser = async (client, body) => {
 
 const create_newPerson = async (client, body) => {
     try {
+        const SanitizerUtil = new Sanitizer();
         const query_values = [body.auth_user_id, body.first_name, body.last_name, body.email];
         const query = `insert into person (auth_user_id, first_name, last_name, email)
-                         values($1, $2, $3, $4) RETURNING *`;
+                         values(${SanitizerUtil.build_values(query_values)}) RETURNING *`;
         return await client.query(query, query_values);
     } catch (e) {
         await client.query('rollback');

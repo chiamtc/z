@@ -19,6 +19,7 @@ describe('tests /issues endpoint', () => {
         await exec('npm run db:project:up');
         await exec('npm run db:proj_parti:up');
         await exec('npm run db:issue:up');
+        await exec('npm run db:history:up');
 
         //Pre-requisite #1 = creates a user
         chai.request('localhost:3000')
@@ -104,6 +105,46 @@ describe('tests /issues endpoint', () => {
                 assert.equal(body.issue_status, c.issueStatus);
                 assert.equal(body.reporter, 1);
                 assert.equal(body.project_id, projectId);
+                assert.isNull(body.parent_issue_id);
+
+                expect(body).to.have.property('project_id');
+                expect(body).to.have.property('issue_id');
+                expect(body).to.have.property('parent_issue_id');
+                expect(body).to.have.property('issue_name');
+                expect(body).to.have.property('issue_type');
+                expect(body).to.have.property('issue_priority');
+                expect(body).to.have.property('issue_status');
+                expect(body).to.have.property('reporter');
+                expect(body).to.have.property('created_date');
+                expect(body).to.have.property('updated_date');
+                done();
+            });
+    });
+
+    it('POST/ sub issues successfully', (done) => {
+        chai.request('localhost:3000')
+            .post('/api/v1/issues')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({
+                issue_name: c.issueName,
+                issue_type: c.issueType,
+                issue_priority: c.issuePriority,
+                issue_status: c.issueStatus,
+                reporter: 1,
+                parent_issue_id:1,
+                project_id: projectId
+            })
+            .end((err, res) => {
+                const body = res.body.data;
+                assert.equal(res.body.status, 200);
+                assert.isNotEmpty(res.body.data);
+                assert.equal(body.issue_name, c.issueName);
+                assert.equal(body.issue_type, c.issueType);
+                assert.equal(body.issue_priority, c.issuePriority);
+                assert.equal(body.issue_status, c.issueStatus);
+                assert.equal(body.reporter, 1);
+                assert.equal(body.project_id, projectId);
+                assert.equal(body.parent_issue_id, 1);
 
                 expect(body).to.have.property('project_id');
                 expect(body).to.have.property('issue_name');
@@ -111,7 +152,6 @@ describe('tests /issues endpoint', () => {
                 expect(body).to.have.property('issue_priority');
                 expect(body).to.have.property('issue_status');
                 expect(body).to.have.property('reporter');
-                expect(body).to.have.property('assignee');
                 expect(body).to.have.property('created_date');
                 expect(body).to.have.property('updated_date');
                 done();

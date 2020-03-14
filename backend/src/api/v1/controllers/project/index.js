@@ -14,17 +14,18 @@ const RequestUtil = new HttpRequest_Utils();
 ProjectRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
     try {
+        const SanitizerUtil = new Sanitizer();
         RequestUtil.extract_request_header(req);
         const body = RequestUtil.body;
         await client.query('begin');
 
-
+        // not doing sanitizer reference with map because it's only 4 values to insert.
         const createProject_Q_values = [body.project_name, body.project_desc, body.project_type, req.user.person_id];
-        const createProject_Q = `insert into project(project_name, project_desc, project_type, project_lead) values($1, $2, $3, $4) returning *`;
+        const createProject_Q = `insert into project(project_name, project_desc, project_type, project_lead) values(${SanitizerUtil.build_values(createProject_Q_values)}) returning *`;
         const createProject_R = await client.query(createProject_Q, createProject_Q_values);
 
         const updateProjParti_Q_values = [parseInt(createProject_R.rows[0].project_id), parseInt(req.user.person_id)];
-        const updateProjParti_Q = `insert into project_participant(project_id, participant_id) values($1, $2)`;
+        const updateProjParti_Q = `insert into project_participant(project_id, participant_id) values(${SanitizerUtil.build_values(updateProjParti_Q_values)})`;
         const updateProjParti_R = await client.query(updateProjParti_Q, updateProjParti_Q_values);
         const response = {
             ...createProject_R.rows[0],
@@ -68,7 +69,6 @@ ProjectRouter.get('/', authenticate_jwtStrategy, async (req, res) => {
     try {
         await client.query('begin');
         let getProject_Q_values = [req.user.person_id, queryLimit, queryOffset];
-        console.log(getProject_Q_values)
         const getProjects_Q = `select * from project p inner join project_participant pp on p.project_id = pp.project_id and pp.participant_id = $1 limit $2 offset $3`;
         const getProjects_R = await client.query(getProjects_Q, getProject_Q_values);
 
@@ -134,13 +134,13 @@ ProjectRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
     const SanitizerUtil = new Sanitizer();
 
     const updateProject_ref = new Map();
-    updateProject_ref.set('project_name', 'project_name');
-    updateProject_ref.set('project_desc', 'project_desc');
-    updateProject_ref.set('project_lead', 'project_lead');
+    updateProject_ref.set('project_name', 's');
+    updateProject_ref.set('project_desc', 's');
+    updateProject_ref.set('project_lead', 'd');
     try {
         SanitizerUtil.sanitize_reference = updateProject_ref;
         SanitizerUtil.sanitize_request(req.body);
-        f = SanitizerUtil.build_update_query();
+        f = SanitizerUtil.build_query('put');
         const updateProject_Q_values = [...f.query_val, id]
         const updateProject_Q = `update project set ${f.query_string} where project_id=$${updateProject_Q_values.length} returning *`;
         const updateProject_R = await client.query(updateProject_Q, updateProject_Q_values);

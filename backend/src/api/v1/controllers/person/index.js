@@ -65,14 +65,14 @@ PersonRouter.put('/me', authenticate_jwtStrategy, async (req, res, next) => {
     const SanitizerUtil = new Sanitizer();
 
     const updateMe_ref = new Map();
-    updateMe_ref.set('first_name', 'first_name');
-    updateMe_ref.set('last_name', 'last_name');
+    updateMe_ref.set('first_name', 's');
+    updateMe_ref.set('last_name', 's');
     // updateMe_ref.set('email', 'email'); //another endpoint for /me/email  or update My email
 
     try {
         SanitizerUtil.sanitize_reference = updateMe_ref;
         SanitizerUtil.sanitize_request(req.body);
-        f = SanitizerUtil.build_update_query();
+        f = SanitizerUtil.build_query('put');
     } catch (e) {
         ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: ${e.message}`);
         ResponseUtil.responds(res);
