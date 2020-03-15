@@ -90,7 +90,9 @@ describe('tests /issues endpoint', () => {
             .set('Authorization', `Bearer ${accessToken}`)
             .send({
                 issue_name: c.issueName,
-                issue_type: c.issueType,
+                issue_type: 'task',
+                issue_desc: c.issueDesc,
+                issue_story_point: c.issueStoryPoint,
                 issue_priority: c.issuePriority,
                 issue_status: c.issueStatus,
                 reporter: 1,
@@ -101,9 +103,11 @@ describe('tests /issues endpoint', () => {
                 assert.equal(res.body.status, 200);
                 assert.isNotEmpty(res.body.data);
                 assert.equal(body.issue_name, c.issueName);
-                assert.equal(body.issue_type, c.issueType);
+                assert.equal(body.issue_type, 'task');
                 assert.equal(body.issue_priority, c.issuePriority);
                 assert.equal(body.issue_status, c.issueStatus);
+                assert.equal(body.issue_desc, c.issueDesc);
+                assert.equal(body.issue_story_point, c.issueStoryPoint);
                 assert.equal(body.reporter, 1);
                 assert.equal(body.project_id, projectId);
                 assert.isNull(body.parent_issue_id);
@@ -113,6 +117,9 @@ describe('tests /issues endpoint', () => {
                 expect(body).to.have.property('parent_issue_id');
                 expect(body).to.have.property('issue_name');
                 expect(body).to.have.property('issue_type');
+                expect(body).to.have.property('issue_desc');
+                expect(body).to.have.property('issue_story_point');
+                expect(body).to.have.property('issue_desc');
                 expect(body).to.have.property('issue_priority');
                 expect(body).to.have.property('issue_status');
                 expect(body).to.have.property('reporter');
@@ -128,11 +135,13 @@ describe('tests /issues endpoint', () => {
             .set('Authorization', `Bearer ${accessToken}`)
             .send({
                 issue_name: c.issueName,
-                issue_type: c.issueType,
+                issue_type: 'subtask',
                 issue_priority: c.issuePriority,
                 issue_status: c.issueStatus,
                 reporter: 1,
                 parent_issue_id:1,
+                issue_desc: c.projectDesc,
+                issue_story_point: c.issueStoryPoint,
                 project_id: projectId
             })
             .end((err, res) => {
@@ -140,7 +149,7 @@ describe('tests /issues endpoint', () => {
                 assert.equal(res.body.status, 200);
                 assert.isNotEmpty(res.body.data);
                 assert.equal(body.issue_name, c.issueName);
-                assert.equal(body.issue_type, c.issueType);
+                assert.equal(body.issue_type, 'subtask');
                 assert.equal(body.issue_priority, c.issuePriority);
                 assert.equal(body.issue_status, c.issueStatus);
                 assert.equal(body.reporter, 1);
@@ -152,6 +161,9 @@ describe('tests /issues endpoint', () => {
                 expect(body).to.have.property('issue_type');
                 expect(body).to.have.property('issue_priority');
                 expect(body).to.have.property('issue_status');
+                expect(body).to.have.property('issue_story_point');
+                expect(body).to.have.property('issue_desc');
+                expect(body).to.have.property('issue_priority');
                 expect(body).to.have.property('reporter');
                 expect(body).to.have.property('created_date');
                 expect(body).to.have.property('updated_date');
@@ -167,6 +179,8 @@ describe('tests /issues endpoint', () => {
                 issue_type: c.issueType,
                 issue_priority: c.issuePriority,
                 issue_status: c.issueStatus,
+                issue_desc: c.projectDesc,
+                issue_story_point: c.issueStoryPoint,
                 reporter: 1,
                 project_id: projectId
             })
@@ -180,6 +194,8 @@ describe('tests /issues endpoint', () => {
                 expect(body).to.not.have.property('project_desc');
                 expect(body).to.not.have.property('project_type');
                 expect(body).to.not.have.property('project_lead');
+                expect(body).to.not.have.property('issue_story_point');
+                expect(body).to.not.have.property('issue_priority');
                 expect(body).to.not.have.property('created_date');
                 expect(body).to.not.have.property('updated_date');
                 done();
@@ -196,6 +212,8 @@ describe('tests /issues endpoint', () => {
                 issue_priority: c.issuePriority,
                 issue_status: c.issueStatus,
                 reporter: 1,
+                issue_desc: c.projectDesc,
+                issue_story_point: c.issueStoryPoint,
                 project_id: projectId
             })
             .end((err, res) => {
@@ -207,6 +225,8 @@ describe('tests /issues endpoint', () => {
                 expect(body).to.not.have.property('project_name');
                 expect(body).to.not.have.property('project_desc');
                 expect(body).to.not.have.property('project_type');
+                expect(body).to.not.have.property('issue_story_point');
+                expect(body).to.not.have.property('issue_priority');
                 expect(body).to.not.have.property('project_lead');
                 expect(body).to.not.have.property('created_date');
                 expect(body).to.not.have.property('updated_date');
@@ -222,6 +242,8 @@ describe('tests /issues endpoint', () => {
                 issue_name: c.issueName,
                 issue_type: c.issueType,
                 issue_priority: c.issuePriority,
+                issue_desc: c.projectDesc,
+                issue_story_point: c.issueStoryPoint,
                 issue_status: 'random status',
                 reporter: 1,
                 project_id: projectId
@@ -235,6 +257,8 @@ describe('tests /issues endpoint', () => {
                 expect(body).to.not.have.property('project_name');
                 expect(body).to.not.have.property('project_desc');
                 expect(body).to.not.have.property('project_type');
+                expect(body).to.not.have.property('issue_story_point');
+                expect(body).to.not.have.property('issue_priority');
                 expect(body).to.not.have.property('project_lead');
                 expect(body).to.not.have.property('created_date');
                 expect(body).to.not.have.property('updated_date');
@@ -251,6 +275,8 @@ describe('tests /issues endpoint', () => {
                 issue_type: c.issueType,
                 issue_priority: 'random priority',
                 issue_status: c.issueStatus,
+                issue_desc: c.projectDesc,
+                issue_story_point: c.issueStoryPoint,
                 reporter: 1,
                 project_id: projectId
             })
@@ -263,6 +289,8 @@ describe('tests /issues endpoint', () => {
                 expect(body).to.not.have.property('project_name');
                 expect(body).to.not.have.property('project_desc');
                 expect(body).to.not.have.property('project_type');
+                expect(body).to.not.have.property('issue_story_point');
+                expect(body).to.not.have.property('issue_priority');
                 expect(body).to.not.have.property('project_lead');
                 expect(body).to.not.have.property('created_date');
                 expect(body).to.not.have.property('updated_date');
@@ -283,9 +311,11 @@ describe('tests /issues endpoint', () => {
                 const issues = data.issues;
                 assert.instanceOf(issues, Array);
                 assert.equal(issues[0].issue_name, c.issueName);
-                assert.equal(issues[0].issue_type, c.issueType);
+                assert.equal(issues[0].issue_type, 'task');
                 assert.equal(issues[0].issue_priority, c.issuePriority);
                 assert.equal(issues[0].issue_status, c.issueStatus);
+                assert.equal(issues[0].issue_desc, c.issueDesc);
+                assert.equal(issues[0].issue_story_point, c.issueStoryPoint);
                 assert.equal(issues[0].reporter, 1);
                 assert.equal(issues[0].project_id, projectId);
                 assert.equal(issues[0].parent_issue_id);
@@ -297,6 +327,8 @@ describe('tests /issues endpoint', () => {
                 expect(issues[0]).to.have.property('issue_type');
                 expect(issues[0]).to.have.property('issue_priority');
                 expect(issues[0]).to.have.property('issue_status');
+                expect(issues[0]).to.have.property('issue_story_point');
+                expect(issues[0]).to.have.property('issue_desc');
                 expect(issues[0]).to.have.property('reporter');
                 expect(issues[0]).to.have.property('created_date');
                 expect(issues[0]).to.have.property('updated_date');
@@ -320,9 +352,178 @@ describe('tests /issues endpoint', () => {
                 expect(body).to.not.have.property('issue_priority');
                 expect(body).to.not.have.property('issue_status');
                 expect(body).to.not.have.property('reporter');
+                expect(body).to.not.have.property('issue_story_point');
+                expect(body).to.not.have.property('issue_desc');
                 expect(body).to.not.have.property('created_date');
                 expect(body).to.not.have.property('updated_date');
                 done();
             });
     });
+
+    it('PUT/ issues successfully', (done) => {
+        chai.request('localhost:3000')
+            .put('/api/v1/issues/1')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({
+                issue_name: c.issueName,
+                issue_type: 'task',
+                issue_desc: c.issueDesc,
+                issue_story_point: c.issueStoryPoint,
+                issue_priority: c.issuePriority,
+                issue_status: c.issueStatus,
+                reporter: 1,
+            })
+            .end((err, res) => {
+                const body = res.body.data;
+                assert.equal(res.body.status, 200);
+                assert.isNotEmpty(res.body.data);
+                assert.equal(body.issue_name, c.issueName);
+                assert.equal(body.issue_type, 'task');
+                assert.equal(body.issue_priority, c.issuePriority);
+                assert.equal(body.issue_status, c.issueStatus);
+                assert.equal(body.issue_desc, c.issueDesc);
+                assert.equal(body.issue_story_point, c.issueStoryPoint);
+                assert.equal(body.reporter, 1);
+
+                expect(body).to.have.property('project_id');
+                expect(body).to.have.property('issue_id');
+                expect(body).to.have.property('parent_issue_id');
+                expect(body).to.have.property('issue_name');
+                expect(body).to.have.property('issue_type');
+                expect(body).to.have.property('issue_desc');
+                expect(body).to.have.property('issue_story_point');
+                expect(body).to.have.property('issue_desc');
+                expect(body).to.have.property('issue_priority');
+                expect(body).to.have.property('issue_status');
+                expect(body).to.have.property('reporter');
+                expect(body).to.have.property('created_date');
+                expect(body).to.have.property('updated_date');
+                done();
+            });
+    });
+
+    it('PUT/ issues fails due to absence of jwt token', (done) => {
+        chai.request('localhost:3000')
+            .put('/api/v1/issues/1')
+            .send({
+                issue_name: c.issueName,
+                issue_type: c.issueType,
+                issue_priority: c.issuePriority,
+                issue_status: c.issueStatus,
+                issue_desc: c.projectDesc,
+                issue_story_point: c.issueStoryPoint,
+                reporter: 1
+            })
+            .end((err, res) => {
+                const body = res.body;
+                assert.equal(body.status, 500);
+
+                expect(body).to.have.property('message');
+                expect(body).to.not.have.property('project_id');
+                expect(body).to.not.have.property('project_name');
+                expect(body).to.not.have.property('project_desc');
+                expect(body).to.not.have.property('project_type');
+                expect(body).to.not.have.property('project_lead');
+                expect(body).to.not.have.property('issue_story_point');
+                expect(body).to.not.have.property('issue_priority');
+                expect(body).to.not.have.property('created_date');
+                expect(body).to.not.have.property('updated_date');
+                done();
+            });
+    });
+
+    it('PUT/ issues fails due to invalid of issue_type', (done) => {
+        chai.request('localhost:3000')
+            .put('/api/v1/issues/1')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({
+                issue_name: c.issueName,
+                issue_type: 'random type',
+                issue_priority: c.issuePriority,
+                issue_status: c.issueStatus,
+                reporter: 1,
+                issue_desc: c.projectDesc,
+                issue_story_point: c.issueStoryPoint,
+            })
+            .end((err, res) => {
+                const body = res.body;
+                assert.equal(body.status, 500);
+
+                expect(body).to.have.property('message');
+                expect(body).to.not.have.property('project_id');
+                expect(body).to.not.have.property('project_name');
+                expect(body).to.not.have.property('project_desc');
+                expect(body).to.not.have.property('project_type');
+                expect(body).to.not.have.property('issue_story_point');
+                expect(body).to.not.have.property('issue_priority');
+                expect(body).to.not.have.property('project_lead');
+                expect(body).to.not.have.property('created_date');
+                expect(body).to.not.have.property('updated_date');
+                done();
+            });
+    });
+
+    it('PUT/ issues fails due to invalid of issue_status', (done) => {
+        chai.request('localhost:3000')
+            .put('/api/v1/issues/1')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({
+                issue_name: c.issueName,
+                issue_type: c.issueType,
+                issue_priority: c.issuePriority,
+                issue_desc: c.projectDesc,
+                issue_story_point: c.issueStoryPoint,
+                issue_status: 'random status',
+                reporter: 1,
+            })
+            .end((err, res) => {
+                const body = res.body;
+                assert.equal(body.status, 500);
+
+                expect(body).to.have.property('message');
+                expect(body).to.not.have.property('project_id');
+                expect(body).to.not.have.property('project_name');
+                expect(body).to.not.have.property('project_desc');
+                expect(body).to.not.have.property('project_type');
+                expect(body).to.not.have.property('issue_story_point');
+                expect(body).to.not.have.property('issue_priority');
+                expect(body).to.not.have.property('project_lead');
+                expect(body).to.not.have.property('created_date');
+                expect(body).to.not.have.property('updated_date');
+                done();
+            });
+    });
+
+    it('PUT/ issues fails due to invalid of issue_priority', (done) => {
+        chai.request('localhost:3000')
+            .put('/api/v1/issues/1')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({
+                issue_name: c.issueName,
+                issue_type: c.issueType,
+                issue_priority: 'random priority',
+                issue_status: c.issueStatus,
+                issue_desc: c.projectDesc,
+                issue_story_point: c.issueStoryPoint,
+                reporter: 1,
+            })
+            .end((err, res) => {
+                const body = res.body;
+                assert.equal(body.status, 500);
+
+                expect(body).to.have.property('message');
+                expect(body).to.not.have.property('project_id');
+                expect(body).to.not.have.property('project_name');
+                expect(body).to.not.have.property('project_desc');
+                expect(body).to.not.have.property('project_type');
+                expect(body).to.not.have.property('issue_story_point');
+                expect(body).to.not.have.property('issue_priority');
+                expect(body).to.not.have.property('project_lead');
+                expect(body).to.not.have.property('created_date');
+                expect(body).to.not.have.property('updated_date');
+                done();
+            });
+    });
+
+
 });

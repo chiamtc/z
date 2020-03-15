@@ -8,12 +8,15 @@ create table issue(
     project_id int not null,
 --  TODO: add  sprint_id int,
     issue_name text not null,
+    issue_desc text,
+    issue_story_point decimal,
     issue_type issue_type_enum not null,
     issue_priority issue_priority_enum,
     issue_status issue_status_enum,
     reporter int not null,
     created_date timestamptz,
     updated_date timestamptz,
+    foreign key (reporter) references person(person_id),
     foreign key(project_id) references project(project_id),
     foreign key(parent_issue_id) references issue(issue_id)
 --  TODO: add  foreign key(sprint_id) references sprint(sprint_id)

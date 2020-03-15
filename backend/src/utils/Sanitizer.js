@@ -15,6 +15,8 @@ export default class Sanitizer {
     }
 
     build_query(ops) {
+        let qs= '';
+        let qv = [];
         this._sanitized_array.map((e, i) => {
             //console.log('e',e);//{projectType: 'new project'}
             const prop = Object.entries(e)[0]; //[ ['projectType', 'new project']  .. ]
@@ -32,13 +34,13 @@ export default class Sanitizer {
                     break;
             }
 
-            this._query_string += ops === 'put' ?
+            qs += ops === 'put' ?
                 `${prop[0]}=$${i + 1}${i === this._sanitized_array.length - 1 ? '' : ', '}` :
                 `${prop[0]}${i === this._sanitized_array.length - 1 ? '' : ', '}`;
             //produces db_name=$x with ' ' or ',' depending on position
-            this._query_val.push(propValue);
+            qv.push(propValue);
         });
-        return {query_string: this.query_string, query_val: this.query_val};
+        return {query_string: qs, query_val: qv};
     }
 
     build_values(values_array) {

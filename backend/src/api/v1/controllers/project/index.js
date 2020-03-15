@@ -112,7 +112,6 @@ ProjectRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
 ProjectRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
     let f;
     const client = await db.client();
-
     const {id} = req.params;
     const SanitizerUtil = new Sanitizer();
 
