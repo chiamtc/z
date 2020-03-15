@@ -242,7 +242,6 @@ describe('tests /project endpoint', () => {
             });
     });
 
-
     it('DELETE/ project successfully', (done) => {
         chai.request('localhost:3000')
             .delete('/api/v1/projects/1')

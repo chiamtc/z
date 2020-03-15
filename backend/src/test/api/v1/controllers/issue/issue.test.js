@@ -19,6 +19,7 @@ describe('tests /issues endpoint', () => {
         await exec('npm run db:project:up');
         await exec('npm run db:proj_parti:up');
         await exec('npm run db:issue:up');
+        await exec('npm run db:parti_issue:up');
         await exec('npm run db:history:up');
 
         //Pre-requisite #1 = creates a user
@@ -263,6 +264,62 @@ describe('tests /issues endpoint', () => {
                 expect(body).to.not.have.property('project_desc');
                 expect(body).to.not.have.property('project_type');
                 expect(body).to.not.have.property('project_lead');
+                expect(body).to.not.have.property('created_date');
+                expect(body).to.not.have.property('updated_date');
+                done();
+            });
+    });
+
+    it('GET/ issues successfully', (done) => {
+        chai.request('localhost:3000')
+            .get('/api/v1/issues')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .end((err, res) => {
+                const data = res.body.data;
+                assert.equal(res.body.status, 200);
+                assert.isNotEmpty(res.body.data);
+                assert.equal(data.total_count, 1);
+                assert.isFalse(data.has_more);
+                const issues = data.issues;
+                assert.instanceOf(issues, Array);
+                assert.equal(issues[0].issue_name, c.issueName);
+                assert.equal(issues[0].issue_type, c.issueType);
+                assert.equal(issues[0].issue_priority, c.issuePriority);
+                assert.equal(issues[0].issue_status, c.issueStatus);
+                assert.equal(issues[0].reporter, 1);
+                assert.equal(issues[0].project_id, projectId);
+                assert.equal(issues[0].parent_issue_id);
+
+                expect(issues[0]).to.have.property('project_id');
+                expect(issues[0]).to.have.property('issue_id');
+                expect(issues[0]).to.have.property('parent_issue_id');
+                expect(issues[0]).to.have.property('issue_name');
+                expect(issues[0]).to.have.property('issue_type');
+                expect(issues[0]).to.have.property('issue_priority');
+                expect(issues[0]).to.have.property('issue_status');
+                expect(issues[0]).to.have.property('reporter');
+                expect(issues[0]).to.have.property('created_date');
+                expect(issues[0]).to.have.property('updated_date');
+                done();
+            });
+    });
+
+    it('GET/ issues fails due to absence of jwt', (done) => {
+        chai.request('localhost:3000')
+            .get('/api/v1/issues')
+            .end((err, res) => {
+                const body = res.body;
+                assert.equal(body.status, 500);
+
+                expect(body).to.have.property('message');
+                expect(body).to.not.have.property('project_id');
+                expect(body).to.not.have.property('issue_id');
+                expect(body).to.not.have.property('parent_issue_id');
+                expect(body).to.not.have.property('issue_name');
+                expect(body).to.not.have.property('issue_type');
+                expect(body).to.not.have.property('issue_priority');
+                expect(body).to.not.have.property('issue_status');
+                expect(body).to.not.have.property('reporter');
                 expect(body).to.not.have.property('created_date');
                 expect(body).to.not.have.property('updated_date');
                 done();

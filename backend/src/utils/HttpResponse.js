@@ -1,4 +1,4 @@
-export default class HttpResponse_Utils {
+export default class HttpResponse {
     constructor() {
         this.statusCode = null;
         this.type = null;

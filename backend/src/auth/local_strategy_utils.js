@@ -1,8 +1,8 @@
 import passport from "passport";
 import ResponseFlag from "../constants/response_flag";
-import HttpResponse_Utils from "../utils/HttpResponse_Utils";
+import HttpResponse from "../utils/HttpResponse";
 
-const ResponseUtil = new HttpResponse_Utils();
+const ResponseUtil = new HttpResponse();
 export const authenticate_jwtStrategy = (req, res, next) => {
 
     passport.authenticate('jwt', (err, user, info) => {

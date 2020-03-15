@@ -1,15 +1,16 @@
 import {Router} from 'express';
 import passport from 'passport';
 import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
-import HttpResponse_Utils from "../../../../utils/HttpResponse_Utils";
+import HttpResponse from "../../../../utils/HttpResponse";
 import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
 import Sanitizer from "../../../../utils/Sanitizer";
 
 const PersonRouter = Router();
 
-const ResponseUtil = new HttpResponse_Utils();
-PersonRouter.get('/me', authenticate_jwtStrategy, async (req, res, next) => {
+const ResponseUtil = new HttpResponse();
+
+PersonRouter.get('/me', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
     try {
         const getUser_Q_values = [req.user.auth_user_id]
@@ -100,5 +101,4 @@ PersonRouter.put('/me', authenticate_jwtStrategy, async (req, res, next) => {
     }
 });
 
-
-export default PersonRouter
+export default PersonRouter;

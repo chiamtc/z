@@ -1,4 +1,4 @@
-export default class HttpRequest_Utils {
+export default class HttpRequest {
     constructor() {
         this.body = null;
         this.query = null;

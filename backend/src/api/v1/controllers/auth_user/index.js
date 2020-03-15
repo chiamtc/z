@@ -1,15 +1,15 @@
 import {Router} from 'express';
 import db from '../../../../db'
-import HttpResponse_Utils from "../../../../utils/HttpResponse_Utils";
-import HttpRequest_Utils from "../../../../utils/HttpRequest_Utils";
+import HttpResponse from "../../../../utils/HttpResponse";
+import HttpRequest from "../../../../utils/HttpRequest";
 import ResponseFlag from "../../../../constants/response_flag";
 import bcrypt from 'bcrypt';
 import {authenticate_loginStrategy} from "../../../../auth/local_strategy_utils";
 import Sanitizer from "../../../../utils/Sanitizer";
 
 const AuthUserRouter = Router();
-const RequestUtil = new HttpRequest_Utils();
-const ResponseUtil = new HttpResponse_Utils();
+const RequestUtil = new HttpRequest();
+const ResponseUtil = new HttpResponse();
 
 AuthUserRouter.get('/', async (req, res) => {
     res.status(200).json({status: '/users is working'})

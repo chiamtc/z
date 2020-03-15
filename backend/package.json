@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node ./bin/www",
     "serve": " nodemon --exec babel-node src/index.js",
-    "db:down": "db-migrate down -c 7 --config ./database/database.json --migrations-dir ./database/migrations",
+    "db:down": "db-migrate down -c 8 --config ./database/database.json --migrations-dir ./database/migrations",
     "db:general:up": "db-migrate up 20200311004346-general --config ./database/database.json --migrations-dir ./database/migrations",
     "db:user:up": "db-migrate up 20200311004401-auth-user --config ./database/database.json --migrations-dir ./database/migrations",
     "db:person:up": "db-migrate up 20200311004406-person --config ./database/database.json --migrations-dir ./database/migrations",
@@ -13,6 +13,7 @@
     "db:proj_parti:up": "db-migrate up 20200311070018-project-participant --config ./database/database.json --migrations-dir ./database/migrations",
     "db:issue:up": "db-migrate up 20200313020117-issue --config ./database/database.json --migrations-dir ./database/migrations",
     "db:history:up": "db-migrate up 20200314073253-history --config ./database/database.json --migrations-dir ./database/migrations",
+    "db:parti_issue:up": "db-migrate up 20200315011431-participant-issue --config ./database/database.json --migrations-dir ./database/migrations",
     "test:signup": "jest src/test/api/v1/controllers/auth_user/signup.test.js --config jest.config.json",
     "test:login": "jest src/test/api/v1/controllers/auth_user/login.test.js --config jest.config.json",
     "test:me": "jest src/test/api/v1/controllers/person/me.test.js --config jest.config.json",

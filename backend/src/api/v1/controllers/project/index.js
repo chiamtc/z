@@ -1,15 +1,16 @@
 import {Router} from 'express';
 import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
-import HttpResponse_Utils from "../../../../utils/HttpResponse_Utils";
-import HttpRequest_Utils from "../../../../utils/HttpRequest_Utils";
+import HttpResponse from "../../../../utils/HttpResponse";
+import HttpRequest from "../../../../utils/HttpRequest";
 import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
 import Sanitizer from "../../../../utils/Sanitizer";
+import Paginator from "../../../../utils/Paginator";
 
 const ProjectRouter = Router();
 
-const ResponseUtil = new HttpResponse_Utils();
-const RequestUtil = new HttpRequest_Utils();
+const ResponseUtil = new HttpResponse();
+const RequestUtil = new HttpRequest();
 
 ProjectRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
@@ -45,30 +46,12 @@ ProjectRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
 });
 
 ProjectRouter.get('/', authenticate_jwtStrategy, async (req, res) => {
-    const {auth_user_id, person_id} = req.user;
-    let queryLimit = 5, queryOffset = 0;
     const client = await db.client();
-    try {
-        if (req.query.hasOwnProperty('limit')) {
-            const {limit} = req.query;
-            queryLimit = parseInt(limit);
-            if (queryLimit <= 0) {
-                ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: query limit must be more than equal 1`);
-                ResponseUtil.responds(res);
-            }
-        }
-        if (req.query.hasOwnProperty('offset')) {
-            const {offset} = req.query;
-            queryOffset = parseInt(offset);
-        }
-    } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: ${e.message}`);
-        ResponseUtil.responds(res);
-    }
+    const paginator = new Paginator(req.query.limit, req.query.offset);
 
     try {
         await client.query('begin');
-        let getProject_Q_values = [req.user.person_id, queryLimit, queryOffset];
+        let getProject_Q_values = [req.user.person_id, paginator.limit, paginator.offset];
         const getProjects_Q = `select * from project p inner join project_participant pp on p.project_id = pp.project_id and pp.participant_id = $1 limit $2 offset $3`;
         const getProjects_R = await client.query(getProjects_Q, getProject_Q_values);
 
@@ -76,7 +59,7 @@ ProjectRouter.get('/', authenticate_jwtStrategy, async (req, res) => {
         const getCount_R = await client.query(getCount_Q, [getProject_Q_values[0]]);
 
         const total_count = parseInt(getCount_R.rows[0].count);
-        const has_more = queryLimit * (queryOffset + 1) < total_count;
+        const has_more = paginator.get_hasMore(total_count);
         await client.query('commit');
 
         ResponseUtil.setResponse(200, ResponseFlag.OK, {projects: getProjects_R.rows, total_count, has_more});

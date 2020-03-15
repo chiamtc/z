@@ -1,6 +1,6 @@
-import HttpResponse_Utils from "./HttpResponse_Utils";
+import HttpResponse from "./HttpResponse";
 
-const ResponseUtil = new HttpResponse_Utils();
+const ResponseUtil = new HttpResponse();
 const handlerError = (err, res) => {
     const {type, statusCode, message} = err;
     ResponseUtil.setResponse(statusCode || err.status, type || err.name, message);
