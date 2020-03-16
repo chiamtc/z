@@ -44,3 +44,38 @@ ALTER TABLE issue ALTER COLUMN issue_priority type issue_priority_enum USING iss
 
 --use enum type
 --ALTER TABLE issue ALTER COLUMN issue_resolution type issue_resolution_enum USING issue_resolution::text::issue_resolution_enum;
+/*
+create or replace function mytrigger(uid integer)
+RETURNS trigger AS $$
+declare
+    _issue_name text;
+    _issue_desc text;
+    _issue_story_point float;
+    _issue_type varchar(255);
+    _issue_priority varchar(255);
+    _issue_status varchar(255);
+begin
+--     code for Insert
+     if  (TG_OP = 'INSERT') then
+           insert into history(person_id, issue_id,history_action) values(new.reporter, new.issue_id, 'created');
+     end if;
+
+--     code for update
+     if  (TG_OP = 'UPDATE') then
+        SELECT i.issue_name, i.issue_desc, i.issue_story_point, i.issue_type, i.issue_priority, i.issue_status INTO
+        _issue_name, _issue_desc, _issue_story_point, _issue_type, _issue_priority, _issue_status
+        from issue i where issue_id = old.issue_id;
+
+        if new.issue_name <> old.issue_name  then
+            insert into history(person_id, issue_id, history_action, old_content, new_content, updated_content_type) values(uid, old.issue_id, 'udpated', old.old_content, new.new_content, 'issue_name');
+        end if;
+
+        if new.issue_desc != old.issue_desc then
+            insert into history(person_id, issue_id, history_action, old_content, new_content, updated_content_type) values(uid, old.issue_id, 'udpated', old.issue_desc, new.new_content, 'issue_desc');
+        end if;
+     end if;
+return new;
+end;
+$$ LANGUAGE plpgsql*/
+
+-- fucking genius https://stackoverflow.com/questions/25148585/pl-pgsql-general-way-to-update-n-columns-in-trigger

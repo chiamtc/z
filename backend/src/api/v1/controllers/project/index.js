@@ -21,10 +21,12 @@ ProjectRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
         await client.query('begin');
 
         // not doing sanitizer reference with map because it's only 4 values to insert.
+        //create project
         const createProject_Q_values = [body.project_name, body.project_desc, body.project_type, req.user.person_id];
         const createProject_Q = `insert into project(project_name, project_desc, project_type, project_lead) values(${SanitizerUtil.build_values(createProject_Q_values)}) returning *`;
         const createProject_R = await client.query(createProject_Q, createProject_Q_values);
 
+        //create project_participant
         const updateProjParti_Q_values = [parseInt(createProject_R.rows[0].project_id), parseInt(req.user.person_id)];
         const updateProjParti_Q = `insert into project_participant(project_id, participant_id) values(${SanitizerUtil.build_values(updateProjParti_Q_values)})`;
         const updateProjParti_R = await client.query(updateProjParti_Q, updateProjParti_Q_values);
@@ -33,6 +35,7 @@ ProjectRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
             first_name: req.user.first_name,
             last_name: req.user.last_name
         };
+
         await client.query('commit');
         ResponseUtil.setResponse(200, ResponseFlag.OK, response);
         ResponseUtil.responds(res);
@@ -44,6 +47,8 @@ ProjectRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
         await client.release();
     }
 });
+
+//TODO get/:id
 
 ProjectRouter.get('/', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();

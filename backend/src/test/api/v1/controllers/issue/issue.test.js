@@ -139,7 +139,7 @@ describe('tests /issues endpoint', () => {
                 issue_priority: c.issuePriority,
                 issue_status: c.issueStatus,
                 reporter: 1,
-                parent_issue_id:1,
+                parent_issue_id: 1,
                 issue_desc: c.projectDesc,
                 issue_story_point: c.issueStoryPoint,
                 project_id: projectId
@@ -342,7 +342,6 @@ describe('tests /issues endpoint', () => {
             .end((err, res) => {
                 const body = res.body;
                 assert.equal(body.status, 500);
-
                 expect(body).to.have.property('message');
                 expect(body).to.not.have.property('project_id');
                 expect(body).to.not.have.property('issue_id');
@@ -366,12 +365,7 @@ describe('tests /issues endpoint', () => {
             .set('Authorization', `Bearer ${accessToken}`)
             .send({
                 issue_name: c.issueName,
-                issue_type: 'task',
-                issue_desc: c.issueDesc,
-                issue_story_point: c.issueStoryPoint,
-                issue_priority: c.issuePriority,
-                issue_status: c.issueStatus,
-                reporter: 1,
+                issue_desc: c.issueDesc
             })
             .end((err, res) => {
                 const body = res.body.data;
@@ -405,15 +399,7 @@ describe('tests /issues endpoint', () => {
     it('PUT/ issues fails due to absence of jwt token', (done) => {
         chai.request('localhost:3000')
             .put('/api/v1/issues/1')
-            .send({
-                issue_name: c.issueName,
-                issue_type: c.issueType,
-                issue_priority: c.issuePriority,
-                issue_status: c.issueStatus,
-                issue_desc: c.projectDesc,
-                issue_story_point: c.issueStoryPoint,
-                reporter: 1
-            })
+            .send({issue_name: c.issueName})
             .end((err, res) => {
                 const body = res.body;
                 assert.equal(body.status, 500);
@@ -436,15 +422,7 @@ describe('tests /issues endpoint', () => {
         chai.request('localhost:3000')
             .put('/api/v1/issues/1')
             .set('Authorization', `Bearer ${accessToken}`)
-            .send({
-                issue_name: c.issueName,
-                issue_type: 'random type',
-                issue_priority: c.issuePriority,
-                issue_status: c.issueStatus,
-                reporter: 1,
-                issue_desc: c.projectDesc,
-                issue_story_point: c.issueStoryPoint,
-            })
+            .send({issue_type: 'random type'})
             .end((err, res) => {
                 const body = res.body;
                 assert.equal(body.status, 500);
@@ -467,15 +445,7 @@ describe('tests /issues endpoint', () => {
         chai.request('localhost:3000')
             .put('/api/v1/issues/1')
             .set('Authorization', `Bearer ${accessToken}`)
-            .send({
-                issue_name: c.issueName,
-                issue_type: c.issueType,
-                issue_priority: c.issuePriority,
-                issue_desc: c.projectDesc,
-                issue_story_point: c.issueStoryPoint,
-                issue_status: 'random status',
-                reporter: 1,
-            })
+            .send({issue_status: 'random status'})
             .end((err, res) => {
                 const body = res.body;
                 assert.equal(body.status, 500);
@@ -498,15 +468,7 @@ describe('tests /issues endpoint', () => {
         chai.request('localhost:3000')
             .put('/api/v1/issues/1')
             .set('Authorization', `Bearer ${accessToken}`)
-            .send({
-                issue_name: c.issueName,
-                issue_type: c.issueType,
-                issue_priority: 'random priority',
-                issue_status: c.issueStatus,
-                issue_desc: c.projectDesc,
-                issue_story_point: c.issueStoryPoint,
-                reporter: 1,
-            })
+            .send({issue_priority: 'random priority'})
             .end((err, res) => {
                 const body = res.body;
                 assert.equal(body.status, 500);
@@ -524,6 +486,5 @@ describe('tests /issues endpoint', () => {
                 done();
             });
     });
-
 
 });

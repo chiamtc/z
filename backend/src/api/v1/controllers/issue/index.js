@@ -28,6 +28,7 @@ IssueRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
     updateMe_ref.set('parent_issue_id', 'd');
     updateMe_ref.set('project_id', 'd');
     updateMe_ref.set('reporter', 'd');
+    // updateMe_ref.set('sprint_id', 'd'); //TODO: uncomment when doing sprint
 
     try {
         SanitizerUtil.sanitize_reference = updateMe_ref;
@@ -68,13 +69,18 @@ IssueRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-IssueRouter.get('/reported', authenticate_jwtStrategy, async (req, res) => {
+IssueRouter.get('/', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
     const paginator = new Paginator(req.query.limit, req.query.offset);
     try {
         await client.query('begin');
         let getIssues_Q_values = [req.user.person_id, paginator.limit, paginator.offset];
-        const getIssues_Q = `select * from issue i inner join participant_issue pi on i.issue_id = pi.issue_id and pi.participant_id = $1 and i.parent_issue_id is null limit $2 offset $3`;
+        const getIssues_Q = `select i.issue_id, i.parent_issue_id, i.project_id, i.issue_name,
+                            i.issue_desc, i.issue_story_point, i.issue_type, i.issue_priority,
+                            i.issue_status, i.reporter, i.created_date, i.updated_date
+                            from issue i inner join participant_issue pi on 
+                            i.issue_id = pi.issue_id and pi.participant_id = $1 and i.parent_issue_id is null 
+                            limit $2 offset $3`;
         const getIssues_R = await client.query(getIssues_Q, getIssues_Q_values);
 
         //TODO: is not null = sub-task
@@ -97,11 +103,10 @@ IssueRouter.get('/reported', authenticate_jwtStrategy, async (req, res) => {
 });
 
 IssueRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
-    let f;
+    let f, h;
     const client = await db.client();
     const {id} = req.params;
     const SanitizerUtil = new Sanitizer();
-
     const updateIssue_ref = new Map();
     updateIssue_ref.set('issue_name', 's');
     updateIssue_ref.set('issue_type', 's');
@@ -110,23 +115,77 @@ IssueRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
     updateIssue_ref.set('issue_story_point', 'f');
     updateIssue_ref.set('issue_status', 's');
     updateIssue_ref.set('parent_issue_id', 'd'); //TODO: move function. aka move current sub task id to another task
-    // updateIssue_ref.set('sprint_id', 'd');
+    // updateIssue_ref.set('sprint_id', 'd'); //TODO: uncomment when doing sprint
+    // updateIssue_ref.set('reporter', 'd');
+    try {
+        SanitizerUtil.sanitize_reference = updateIssue_ref;
+        SanitizerUtil.sanitize_request(req.body);
+        f = SanitizerUtil.build_query('put');
+        h = SanitizerUtil.build_query('post');
+
+        await client.query('begin');
+
+        // create history regarding to issue update
+        h.query_string.split(',').map(async (str, i) => {
+            const createHistory_Q_values = [parseInt(req.user.person_id), h.query_val[i], str, id];
+            const createHistory_Q = `insert into history (issue_id, person_id, history_action, new_content, old_content, updated_content_type)
+                                select i.issue_id, $1, 'updated', $2, i.${str}, $3 from issue i where issue_id = $4`;
+            const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
+        });
+
+        //update issue
+        const updateIssue_Q_values = [...f.query_val, id];
+        const updateIssue_Q = `update issue set ${f.query_string} where issue_id=$${updateIssue_Q_values.length} returning *`;
+        const updateIssue_R = await client.query(updateIssue_Q, updateIssue_Q_values);
+
+        await client.query('commit');
+        ResponseUtil.setResponse(200, ResponseFlag.OK, updateIssue_R.rows[0]);
+        ResponseUtil.responds(res);
+    } catch (e) {
+        await client.query('rollback');
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.responds(res);
+    } finally {
+        await client.release();
+    }
+});
+
+IssueRouter.put('/reporter/:id', authenticate_jwtStrategy, async (req, res) => {
+    let f, h;
+    const client = await db.client();
+    const {id} = req.params;
+    const SanitizerUtil = new Sanitizer();
+    const updateIssue_ref = new Map();
     updateIssue_ref.set('reporter', 'd');
     try {
         SanitizerUtil.sanitize_reference = updateIssue_ref;
         SanitizerUtil.sanitize_request(req.body);
         f = SanitizerUtil.build_query('put');
-        console.log(f);
-        console.log(SanitizerUtil.build_query('post'));
-        /*
-        const history_Q_val = [
-         INSERT INTO history (issue_id, person_id, history_action, new_content, old_content)
-         SELECT issue_id, 2, 'updated', 'new issue name', issue_name
-         FROM  issue  WHERE  issue_id = i
-         */
-        // const updateIssue_Q_values = [...f.query_val, id]
-        // const updateIssue_Q = `update issue set ${f.query_string} where issue_id=$${updateIssue_Q_values.length} returning *`;
+        h = SanitizerUtil.build_query('post');
+
+        await client.query('begin');
+
+        // create history regarding to issue update
+        h.query_string.split(',').map(async (str, i) => {
+            const createHistory_Q_values = [parseInt(req.user.person_id), h.query_val[i], str, id];
+            const createHistory_Q = `insert into history (issue_id, person_id, history_action, new_content, old_content, updated_content_type)
+                                select i.issue_id, $1, 'updated', $2, i.${str}, $3 from issue i where issue_id = $4`;
+            console.log(createHistory_Q)
+            // const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
+        });
+
+        //update participant_issue
+        const updateParticipantIssue_Q_values = [f.query_val[0], id];
+        const updateParticipantIssue_Q = `update participant_issue set participant_id where issue_id=$2 returning *`;
+        // const updateParticipantIssue_R = await client.query(updateParticipantIssue_Q, updateParticipantIssue_Q_values);
+
+        //update issue
+        const updateIssue_Q_values = [f.query_val[0], id];
+        const updateIssue_Q = `update issue set reporter=$1 where issue_id=$2 returning *`;
         // const updateIssue_R = await client.query(updateIssue_Q, updateIssue_Q_values);
+
+        console.log(updateParticipantIssue_Q, updateIssue_Q)
+        await client.query('commit');
         ResponseUtil.setResponse(200, ResponseFlag.OK, 'ok');//updateIssue_R.rows[0]);
         ResponseUtil.responds(res);
     } catch (e) {
@@ -137,6 +196,7 @@ IssueRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
         await client.release();
     }
 });
+
 export default IssueRouter;
 /*
 epic #1

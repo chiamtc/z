@@ -6,6 +6,7 @@ create table history(
     history_action history_action_enum,
     new_content text,
     old_content text,
+    updated_content_type varchar(255),
     created_date timestamptz
 );
 
