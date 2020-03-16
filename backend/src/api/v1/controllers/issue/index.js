@@ -170,23 +170,21 @@ IssueRouter.put('/reporter/:id', authenticate_jwtStrategy, async (req, res) => {
             const createHistory_Q_values = [parseInt(req.user.person_id), h.query_val[i], str, id];
             const createHistory_Q = `insert into history (issue_id, person_id, history_action, new_content, old_content, updated_content_type)
                                 select i.issue_id, $1, 'updated', $2, i.${str}, $3 from issue i where issue_id = $4`;
-            console.log(createHistory_Q)
-            // const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
+            const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
         });
 
         //update participant_issue
         const updateParticipantIssue_Q_values = [f.query_val[0], id];
-        const updateParticipantIssue_Q = `update participant_issue set participant_id where issue_id=$2 returning *`;
-        // const updateParticipantIssue_R = await client.query(updateParticipantIssue_Q, updateParticipantIssue_Q_values);
+        const updateParticipantIssue_Q = `update participant_issue set participant_id=$1 where issue_id=$2 and participant_type = 'reporter'`;
+        const updateParticipantIssue_R = await client.query(updateParticipantIssue_Q, updateParticipantIssue_Q_values);
 
         //update issue
         const updateIssue_Q_values = [f.query_val[0], id];
         const updateIssue_Q = `update issue set reporter=$1 where issue_id=$2 returning *`;
-        // const updateIssue_R = await client.query(updateIssue_Q, updateIssue_Q_values);
+        const updateIssue_R = await client.query(updateIssue_Q, updateIssue_Q_values);
 
-        console.log(updateParticipantIssue_Q, updateIssue_Q)
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, 'ok');//updateIssue_R.rows[0]);
+        ResponseUtil.setResponse(200, ResponseFlag.OK, updateIssue_R.rows[0]);
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');

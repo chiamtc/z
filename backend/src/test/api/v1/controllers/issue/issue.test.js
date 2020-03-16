@@ -487,4 +487,83 @@ describe('tests /issues endpoint', () => {
             });
     });
 
+    it('PUT/reporter/:id issues successfully', (done) => {
+        chai.request('localhost:3000')
+            .put('/api/v1/issues/reporter/1')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({reporter:1})
+            .end((err, res) => {
+                const body = res.body.data;
+                assert.equal(res.body.status, 200);
+                assert.isNotEmpty(res.body.data);
+                assert.equal(body.issue_name, c.issueName);
+                assert.equal(body.issue_type, 'task');
+                assert.equal(body.issue_priority, c.issuePriority);
+                assert.equal(body.issue_status, c.issueStatus);
+                assert.equal(body.issue_desc, c.issueDesc);
+                assert.equal(body.issue_story_point, c.issueStoryPoint);
+                assert.equal(body.reporter, 1);
+
+                expect(body).to.have.property('project_id');
+                expect(body).to.have.property('issue_id');
+                expect(body).to.have.property('parent_issue_id');
+                expect(body).to.have.property('issue_name');
+                expect(body).to.have.property('issue_type');
+                expect(body).to.have.property('issue_desc');
+                expect(body).to.have.property('issue_story_point');
+                expect(body).to.have.property('issue_desc');
+                expect(body).to.have.property('issue_priority');
+                expect(body).to.have.property('issue_status');
+                expect(body).to.have.property('reporter');
+                expect(body).to.have.property('created_date');
+                expect(body).to.have.property('updated_date');
+                done();
+            });
+    });
+
+    it('PUT/ issues fails due to absence of jwt token', (done) => {
+        chai.request('localhost:3000')
+            .put('/api/v1/issues/reporter/1')
+            .send({reporter:1})
+            .end((err, res) => {
+                const body = res.body;
+                assert.equal(body.status, 500);
+
+                expect(body).to.have.property('message');
+                expect(body).to.not.have.property('project_id');
+                expect(body).to.not.have.property('project_name');
+                expect(body).to.not.have.property('project_desc');
+                expect(body).to.not.have.property('project_type');
+                expect(body).to.not.have.property('project_lead');
+                expect(body).to.not.have.property('issue_story_point');
+                expect(body).to.not.have.property('issue_priority');
+                expect(body).to.not.have.property('created_date');
+                expect(body).to.not.have.property('updated_date');
+                done();
+            });
+    });
+
+    it('PUT/ issues fails due to invalid reporter id', (done) => {
+        chai.request('localhost:3000')
+            .put('/api/v1/issues/reporter/1')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({reporter:10})
+            .end((err, res) => {
+                const body = res.body;
+                assert.equal(body.status, 500);
+
+                expect(body).to.have.property('message');
+                expect(body).to.not.have.property('project_id');
+                expect(body).to.not.have.property('project_name');
+                expect(body).to.not.have.property('project_desc');
+                expect(body).to.not.have.property('project_type');
+                expect(body).to.not.have.property('issue_story_point');
+                expect(body).to.not.have.property('issue_priority');
+                expect(body).to.not.have.property('project_lead');
+                expect(body).to.not.have.property('created_date');
+                expect(body).to.not.have.property('updated_date');
+                done();
+            });
+    });
+
 });
