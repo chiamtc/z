@@ -18,20 +18,20 @@ IssueRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
     const SanitizerUtil = new Sanitizer();
 
-    const updateMe_ref = new Map();
-    updateMe_ref.set('issue_name', 's');
-    updateMe_ref.set('issue_type', 's');
-    updateMe_ref.set('issue_desc', 's');
-    updateMe_ref.set('issue_story_point', 'f');
-    updateMe_ref.set('issue_priority', 's');
-    updateMe_ref.set('issue_status', 's');
-    updateMe_ref.set('parent_issue_id', 'd');
-    updateMe_ref.set('project_id', 'd');
-    updateMe_ref.set('reporter', 'd');
+    const createIssue_ref = new Map();
+    createIssue_ref.set('issue_name', 's');
+    createIssue_ref.set('issue_type', 's');
+    createIssue_ref.set('issue_desc', 's');
+    createIssue_ref.set('issue_story_point', 'f');
+    createIssue_ref.set('issue_priority', 's');
+    createIssue_ref.set('issue_status', 's');
+    createIssue_ref.set('parent_issue_id', 'd');
+    createIssue_ref.set('project_id', 'd');
+    createIssue_ref.set('reporter', 'd');
     // updateMe_ref.set('sprint_id', 'd'); //TODO: uncomment when doing sprint
 
     try {
-        SanitizerUtil.sanitize_reference = updateMe_ref;
+        SanitizerUtil.sanitize_reference = createIssue_ref;
         SanitizerUtil.sanitize_request(req.body);
         f = SanitizerUtil.build_query('post');
     } catch (e) {
@@ -127,9 +127,9 @@ IssueRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
 
         // create history regarding to issue update
         h.query_string.split(',').map(async (str, i) => {
-            const createHistory_Q_values = [parseInt(req.user.person_id), h.query_val[i], str, id];
+            const createHistory_Q_values = [parseInt(req.user.person_id), QueryConstant.HISTORY_ACTION_UPDATED, h.query_val[i], str, id];
             const createHistory_Q = `insert into history (issue_id, person_id, history_action, new_content, old_content, updated_content_type)
-                                select i.issue_id, $1, 'updated', $2, i.${str}, $3 from issue i where issue_id = $4`;
+                                select i.issue_id, $1, $2, $3, i.${str}, $4 from issue i where issue_id = $5`;
             const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
         });
 
@@ -155,10 +155,10 @@ IssueRouter.put('/reporter/:id', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
     const {id} = req.params;
     const SanitizerUtil = new Sanitizer();
-    const updateIssue_ref = new Map();
-    updateIssue_ref.set('reporter', 'd');
+    const updateReporter_ref = new Map();
+    updateReporter_ref.set('reporter', 'd');
     try {
-        SanitizerUtil.sanitize_reference = updateIssue_ref;
+        SanitizerUtil.sanitize_reference = updateReporter_ref;
         SanitizerUtil.sanitize_request(req.body);
         f = SanitizerUtil.build_query('put');
         h = SanitizerUtil.build_query('post');
@@ -167,9 +167,9 @@ IssueRouter.put('/reporter/:id', authenticate_jwtStrategy, async (req, res) => {
 
         // create history regarding to issue update
         h.query_string.split(',').map(async (str, i) => {
-            const createHistory_Q_values = [parseInt(req.user.person_id), h.query_val[i], str, id];
+            const createHistory_Q_values = [parseInt(req.user.person_id), QueryConstant.HISTORY_ACTION_UPDATED, h.query_val[i], str, id];
             const createHistory_Q = `insert into history (issue_id, person_id, history_action, new_content, old_content, updated_content_type)
-                                select i.issue_id, $1, 'updated', $2, i.${str}, $3 from issue i where issue_id = $4`;
+                                select i.issue_id, $1, $2, $3, i.${str}, $4 from issue i where issue_id = $5`;
             const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
         });
 
@@ -185,6 +185,94 @@ IssueRouter.put('/reporter/:id', authenticate_jwtStrategy, async (req, res) => {
 
         await client.query('commit');
         ResponseUtil.setResponse(200, ResponseFlag.OK, updateIssue_R.rows[0]);
+        ResponseUtil.responds(res);
+    } catch (e) {
+        await client.query('rollback');
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.responds(res);
+    } finally {
+        await client.release();
+    }
+});
+
+IssueRouter.post('/assignee/:id', authenticate_jwtStrategy, async (req, res) => {
+    let f;
+    const {id} = req.params;
+    const client = await db.client();
+    const SanitizerUtil = new Sanitizer();
+
+    const createAssignee_ref = new Map();
+    createAssignee_ref.set('assignee', 'd');
+    // updateMe_ref.set('sprint_id', 'd'); //TODO: uncomment when doing sprint
+
+    try {
+        SanitizerUtil.sanitize_reference = createAssignee_ref;
+        SanitizerUtil.sanitize_request(req.body);
+        f = SanitizerUtil.build_query('post');
+    } catch (e) {
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: ${e.message}`);
+        ResponseUtil.responds(res);
+    }
+    try {
+        await client.query('begin');
+
+        //create issue_participant
+        const createParticipant_Issue_Q_values = [f.query_val[0], id, QueryConstant.PARTICIPANT_TYPE_ASSGINEE];
+        const createParticipant_Issue_Q = `insert into participant_issue(participant_id, issue_id, participant_type) values($1,$2,$3);`;
+        const createParticipant_Issue_R = await client.query(createParticipant_Issue_Q, createParticipant_Issue_Q_values);
+
+        //create history
+        const createHistory_Q_values = [req.user.person_id, id, QueryConstant.HISTORY_ACTION_UPDATED, null, f.query_val[0], 'assignee'];
+        const createHistory_Q = `insert into history(person_id, issue_id, history_action, old_content, new_content, updated_content_type) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
+        const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
+
+        await client.query('commit');
+        ResponseUtil.setResponse(200, ResponseFlag.OK, 'todo: think about what to return..');
+        ResponseUtil.responds(res);
+
+    } catch (e) {
+        await client.query('rollback');
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.responds(res);
+    } finally {
+        await client.release();
+    }
+});
+
+IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, async (req, res) => {
+    let f;
+    const {id} = req.params;
+    const client = await db.client();
+    const SanitizerUtil = new Sanitizer();
+
+    const createAssignee_ref = new Map();
+    createAssignee_ref.set('assignee', 'd');
+    // updateMe_ref.set('sprint_id', 'd'); //TODO: uncomment when doing sprint
+
+    try {
+        SanitizerUtil.sanitize_reference = createAssignee_ref;
+        SanitizerUtil.sanitize_request(req.body);
+        f = SanitizerUtil.build_query('post');
+    } catch (e) {
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: ${e.message}`);
+        ResponseUtil.responds(res);
+    }
+    try {
+        await client.query('begin');
+
+        //create issue_participant
+        const createParticipant_Issue_Q_values = [f.query_val[0], id, QueryConstant.PARTICIPANT_TYPE_ASSGINEE];
+        const createParticipant_Issue_Q = `delete from participant_issue where participant_id=$1 and  issue_id=$2 and participant_type=$3 returning *`;
+        const createParticipant_Issue_R = await client.query(createParticipant_Issue_Q, createParticipant_Issue_Q_values);
+
+        //create history
+        const createHistory_Q_values = [req.user.person_id, id, QueryConstant.HISTORY_ACTION_REMOVED, null, f.query_val[0], 'assignee'];
+        const createHistory_Q = `insert into history(person_id, issue_id, history_action, old_content, new_content, updated_content_type) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
+        const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
+
+        await client.query('commit');
+
+        ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: createParticipant_Issue_R.rows.length !== 0});
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
