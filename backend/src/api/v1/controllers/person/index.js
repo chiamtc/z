@@ -30,7 +30,7 @@ PersonRouter.get('/me', authenticate_jwtStrategy, async (req, res) => {
         ResponseUtil.setResponse(200, ResponseFlag.OK, payload);
         ResponseUtil.responds(res);
     } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
         await client.release();
@@ -53,7 +53,7 @@ PersonRouter.get('/:id', authenticate_jwtStrategy, async (req, res, next) => {
             ResponseUtil.responds(res);
         }
     } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
         await client.release();
@@ -75,7 +75,7 @@ PersonRouter.put('/me', authenticate_jwtStrategy, async (req, res, next) => {
         SanitizerUtil.sanitize_request(req.body);
         f = SanitizerUtil.build_query('put');
     } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: ${e.message}`);
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
         ResponseUtil.responds(res);
     }
 
@@ -89,12 +89,12 @@ PersonRouter.put('/me', authenticate_jwtStrategy, async (req, res, next) => {
             ResponseUtil.setResponse(200, ResponseFlag.OK, rows[0]);
             ResponseUtil.responds(res);
         }else{
-            ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.OBJECT_NOT_UPDATED}`);
+            ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.OBJECT_NOT_UPDATED}`);
             ResponseUtil.responds(res);
         }
     } catch (e) {
         await client.query('rollback');
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
         await client.release();

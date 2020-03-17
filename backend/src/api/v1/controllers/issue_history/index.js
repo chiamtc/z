@@ -1,7 +1,6 @@
 import {Router} from 'express';
 import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
 import HttpResponse from "../../../../utils/HttpResponse";
-import HttpRequest from "../../../../utils/HttpRequest";
 import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
 import Sanitizer from "../../../../utils/Sanitizer";
@@ -11,7 +10,6 @@ import Paginator from "../../../../utils/Paginator";
 const IssueHistoryRouter = Router();
 
 const ResponseUtil = new HttpResponse();
-const RequestUtil = new HttpRequest();
 
 IssueHistoryRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
@@ -34,7 +32,7 @@ IssueHistoryRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
         await client.release();

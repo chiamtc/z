@@ -21,7 +21,8 @@
     "test:person": "jest src/test/api/v1/controllers/person/person.test.js --config jest.config.json",
     "test:project": "jest src/test/api/v1/controllers/project/project.test.js --config jest.config.json",
     "test:issue": "jest src/test/api/v1/controllers/issue/issue.test.js --config jest.config.json",
-    "test:history": "jest src/test/api/v1/controllers/history/issue_history.test.js --config jest.config.json"
+    "test:history": "jest src/test/api/v1/controllers/history/issue_history.test.js --config jest.config.json",
+    "test:sprint": "jest src/test/api/v1/controllers/sprint/sprint.test.js --config jest.config.json"
   },
   "dependencies": {
     "@babel/cli": "^7.7.4",

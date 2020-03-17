@@ -1,7 +1,6 @@
 import {Router} from 'express';
 import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
 import HttpResponse from "../../../../utils/HttpResponse";
-import HttpRequest from "../../../../utils/HttpRequest";
 import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
 import Sanitizer from "../../../../utils/Sanitizer";
@@ -11,7 +10,6 @@ import Paginator from "../../../../utils/Paginator";
 const IssueRouter = Router();
 
 const ResponseUtil = new HttpResponse();
-const RequestUtil = new HttpRequest();
 
 IssueRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
     let f;
@@ -35,7 +33,7 @@ IssueRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
         SanitizerUtil.sanitize_request(req.body);
         f = SanitizerUtil.build_query('post');
     } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: ${e.message}`);
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
         ResponseUtil.responds(res);
     }
     try {
@@ -62,7 +60,28 @@ IssueRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
 
     } catch (e) {
         await client.query('rollback');
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.responds(res);
+    } finally {
+        await client.release();
+    }
+});
+
+IssueRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
+    const client = await db.client();
+    try {
+        const {id} = req.params;
+        await client.query('begin');
+        let getIssue_Q_values = [id];
+        const getIssue_Q = `select * from issue where issue_id=$1`;
+        const getIssue_R = await client.query(getIssue_Q, getIssue_Q_values);
+
+        await client.query('commit');
+        ResponseUtil.setResponse(200, ResponseFlag.OK, getIssue_R.rows.length !== 0 ? getIssue_R.rows[0] : {});
+        ResponseUtil.responds(res);
+    } catch (e) {
+        await client.query('rollback');
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
         await client.release();
@@ -95,7 +114,7 @@ IssueRouter.get('/', authenticate_jwtStrategy, async (req, res) => {
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
         await client.release();
@@ -142,7 +161,7 @@ IssueRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
         await client.release();
@@ -187,7 +206,7 @@ IssueRouter.put('/reporter/:id', authenticate_jwtStrategy, async (req, res) => {
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
         await client.release();
@@ -209,7 +228,7 @@ IssueRouter.post('/assignee/:id', authenticate_jwtStrategy, async (req, res) => 
         SanitizerUtil.sanitize_request(req.body);
         f = SanitizerUtil.build_query('post');
     } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: ${e.message}`);
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
         ResponseUtil.responds(res);
     }
     try {
@@ -217,8 +236,12 @@ IssueRouter.post('/assignee/:id', authenticate_jwtStrategy, async (req, res) => 
 
         //create issue_participant
         const createParticipant_Issue_Q_values = [f.query_val[0], id, QueryConstant.PARTICIPANT_TYPE_ASSGINEE];
-        const createParticipant_Issue_Q = `insert into participant_issue(participant_id, issue_id, participant_type) values($1,$2,$3);`;
+        const createParticipant_Issue_Q = `insert into participant_issue(participant_id, issue_id, participant_type) values($1,$2,$3) returning participant_id`;
         const createParticipant_Issue_R = await client.query(createParticipant_Issue_Q, createParticipant_Issue_Q_values);
+
+        const getParticipant_Q_values = [createParticipant_Issue_R.rows[0].participant_id];
+        const getParticipant_Q = `select * from person where person_id=$1`;
+        const getParticipant_R = await client.query(getParticipant_Q, getParticipant_Q_values);
 
         //create history
         const createHistory_Q_values = [req.user.person_id, id, QueryConstant.HISTORY_ACTION_UPDATED, null, f.query_val[0], 'assignee'];
@@ -226,12 +249,12 @@ IssueRouter.post('/assignee/:id', authenticate_jwtStrategy, async (req, res) => 
         const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
 
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, 'todo: think about what to return..');
+        ResponseUtil.setResponse(200, ResponseFlag.OK, getParticipant_R.rows[0]);
         ResponseUtil.responds(res);
 
     } catch (e) {
         await client.query('rollback');
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
         await client.release();
@@ -253,7 +276,7 @@ IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, async (req, res) =
         SanitizerUtil.sanitize_request(req.body);
         f = SanitizerUtil.build_query('post');
     } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.baseUrl} - Sanitizing Process: ${e.message}`);
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
         ResponseUtil.responds(res);
     }
     try {
@@ -261,8 +284,13 @@ IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, async (req, res) =
 
         //create issue_participant
         const createParticipant_Issue_Q_values = [f.query_val[0], id, QueryConstant.PARTICIPANT_TYPE_ASSGINEE];
-        const createParticipant_Issue_Q = `delete from participant_issue where participant_id=$1 and  issue_id=$2 and participant_type=$3 returning *`;
+        const createParticipant_Issue_Q = `delete from participant_issue where participant_id=$1 and issue_id=$2 and participant_type=$3 returning *`;
         const createParticipant_Issue_R = await client.query(createParticipant_Issue_Q, createParticipant_Issue_Q_values);
+
+        //get deleted participant
+        const getParticipant_Q_values = [createParticipant_Issue_R.rows[0].participant_id];
+        const getParticipant_Q = `select * from person where person_id=$1`;
+        const getParticipant_R = await client.query(getParticipant_Q, getParticipant_Q_values);
 
         //create history
         const createHistory_Q_values = [req.user.person_id, id, QueryConstant.HISTORY_ACTION_REMOVED, null, f.query_val[0], 'assignee'];
@@ -270,12 +298,16 @@ IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, async (req, res) =
         const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
 
         await client.query('commit');
+        if(createParticipant_Issue_R.rows.length !== 0){
+            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true, assignee:getParticipant_R.rows[0]});
+        }else {
+            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: false, assignee:{}});
+        }
 
-        ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: createParticipant_Issue_R.rows.length !== 0});
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
         await client.release();

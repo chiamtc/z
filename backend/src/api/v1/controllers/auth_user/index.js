@@ -32,7 +32,7 @@ AuthUserRouter.post('/signup', async (req, res) => {
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `${res.req.baseUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
         await client.release();

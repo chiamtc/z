@@ -17,6 +17,7 @@ describe('tests /project endpoint', () => {
         await exec('npm run db:person:up');
         await exec('npm run db:project:up');
         await exec('npm run db:proj_parti:up');
+        await exec('npm run db:sprint:up');
 
         chai.request('localhost:3000')
             .post('/api/v1/users/signup')
@@ -144,7 +145,7 @@ describe('tests /project endpoint', () => {
             })
     });
 
-    it('PUT/ project successfully', (done) => {
+    it('PUT/:id project successfully', (done) => {
         chai.request('localhost:3000')
             .put('/api/v1/projects/1')
             .set('Authorization', `Bearer ${accessToken}`)
@@ -172,7 +173,7 @@ describe('tests /project endpoint', () => {
             });
     });
 
-    it('PUT/ project fails due to absence of jwt', (done) => {
+    it('PUT/:id project fails due to absence of jwt', (done) => {
         chai.request('localhost:3000')
             .put('/api/v1/projects/1')
             .send({
@@ -194,6 +195,48 @@ describe('tests /project endpoint', () => {
                 expect(body).to.not.have.property('updated_date');
                 done();
             })
+    });
+
+    it('GET/:id project successfully', (done) => {
+        chai.request('localhost:3000')
+            .get('/api/v1/projects/1')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .end((err, res) => {
+                const data = res.body.data;
+                assert.equal(res.body.status, 200);
+                assert.isNotEmpty(res.body.data);
+                assert.equal(data.project_name, c.projectName);
+                assert.equal(data.project_desc, c.projectDesc);
+                assert.equal(data.project_type, c.projectType);
+
+                expect(data).to.have.property('project_id');
+                expect(data).to.have.property('project_name');
+                expect(data).to.have.property('project_desc');
+                expect(data).to.have.property('project_type');
+                expect(data).to.have.property('project_lead');
+                expect(data).to.have.property('created_date');
+                expect(data).to.have.property('updated_date');
+                done();
+            });
+    });
+
+    it('GET/:id fails due to absence of jwt', (done) => {
+        chai.request('localhost:3000')
+            .get('/api/v1/projects/1')
+            .end((err, res) => {
+                const body = res.body;
+                assert.equal(body.status, 500);
+
+                expect(body).to.have.property('message');
+                expect(body).to.not.have.property('project_id');
+                expect(body).to.not.have.property('project_name');
+                expect(body).to.not.have.property('project_desc');
+                expect(body).to.not.have.property('project_type');
+                expect(body).to.not.have.property('project_lead');
+                expect(body).to.not.have.property('created_date');
+                expect(body).to.not.have.property('updated_date');
+                done();
+            });
     });
 
     it('GET/ project successfully', (done) => {
@@ -242,7 +285,7 @@ describe('tests /project endpoint', () => {
             });
     });
 
-    it('DELETE/ project successfully', (done) => {
+    it('DELETE/:id project successfully', (done) => {
         chai.request('localhost:3000')
             .delete('/api/v1/projects/1')
             .set('Authorization', `Bearer ${accessToken}`)
@@ -263,7 +306,7 @@ describe('tests /project endpoint', () => {
             });
     });
 
-    it('DELETE/ project fails by sending not a number in query params', (done) => {
+    it('DELETE/:id project fails by sending not a number in query params', (done) => {
         chai.request('localhost:3000')
             .delete('/api/v1/projects/abc')
             .set('Authorization', `Bearer ${accessToken}`)
@@ -274,7 +317,7 @@ describe('tests /project endpoint', () => {
             });
     });
 
-    it('DELETE/ project fails due to absence of jwt token', (done) => {
+    it('DELETE/:id project fails due to absence of jwt token', (done) => {
         chai.request('localhost:3000')
             .delete('/api/v1/projects/1')
             .end((err, res) => {
@@ -284,13 +327,30 @@ describe('tests /project endpoint', () => {
             });
     });
 
-    it('DELETE/ project fails due to absence of jwt token', (done) => {
+    it('DELETE/:id project fails due to absence of jwt token', (done) => {
         chai.request('localhost:3000')
             .delete('/api/v1/projects/2')
             .set('Authorization', `Bearer ${accessToken}`)
             .end((err, res) => {
                 assert.equal(res.body.status, 200);
                 assert.equal(res.body.data, ResponseFlag.OBJECT_NOT_DELETED);
+                done();
+            });
+    });
+
+    it('GET/sprints/:id project successfully', (done) => {
+        chai.request('localhost:3000')
+            .get('/api/v1/projects/sprints/1')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .end((err, res) => {
+                const data = res.body.data;
+                assert.equal(res.body.status, 200);
+                assert.isNotEmpty(res.body.data);
+                assert.equal(data.total_count, 0);
+                assert.isFalse(data.has_more);
+                const sprints = data.sprints;
+                assert.instanceOf(sprints, Array);
+                //should really create a sprint, assign that sprint to a project then test this. but im too lazy for that shit
                 done();
             });
     });

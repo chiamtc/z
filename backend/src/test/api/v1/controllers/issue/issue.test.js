@@ -360,6 +360,65 @@ describe('tests /issues endpoint', () => {
             });
     });
 
+    it('GET/:id issues successfully', (done) => {
+        chai.request('localhost:3000')
+            .get('/api/v1/issues/1')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .end((err, res) => {
+                const data = res.body.data;
+                assert.equal(res.body.status, 200);
+                assert.isNotEmpty(res.body.data);
+
+                assert.equal(data.issue_name, c.issueName);
+                assert.equal(data.issue_type, 'task');
+                assert.equal(data.issue_priority, c.issuePriority);
+                assert.equal(data.issue_status, c.issueStatus);
+                assert.equal(data.issue_desc, c.issueDesc);
+                assert.equal(data.issue_story_point, c.issueStoryPoint);
+                assert.equal(data.reporter, 1);
+                assert.equal(data.project_id, projectId);
+                assert.equal(data.issue_id, 1);
+                assert.equal(data.parent_issue_id);
+
+                expect(data).to.have.property('project_id');
+                expect(data).to.have.property('issue_id');
+                expect(data).to.have.property('parent_issue_id');
+                expect(data).to.have.property('issue_name');
+                expect(data).to.have.property('issue_type');
+                expect(data).to.have.property('issue_priority');
+                expect(data).to.have.property('issue_status');
+                expect(data).to.have.property('issue_story_point');
+                expect(data).to.have.property('issue_desc');
+                expect(data).to.have.property('reporter');
+                expect(data).to.have.property('created_date');
+                expect(data).to.have.property('updated_date');
+                done();
+            });
+    });
+
+    it('GET/:id issues fails due to absence of jwt', (done) => {
+        chai.request('localhost:3000')
+            .get('/api/v1/issues/1')
+            .end((err, res) => {
+                const body = res.body;
+                assert.equal(body.status, 500);
+                expect(body).to.have.property('message');
+                expect(body).to.not.have.property('project_id');
+                expect(body).to.not.have.property('issue_id');
+                expect(body).to.not.have.property('parent_issue_id');
+                expect(body).to.not.have.property('issue_name');
+                expect(body).to.not.have.property('issue_type');
+                expect(body).to.not.have.property('issue_priority');
+                expect(body).to.not.have.property('issue_status');
+                expect(body).to.not.have.property('reporter');
+                expect(body).to.not.have.property('issue_story_point');
+                expect(body).to.not.have.property('issue_desc');
+                expect(body).to.not.have.property('created_date');
+                expect(body).to.not.have.property('updated_date');
+                done();
+            });
+    });
+
     it('PUT/ issues successfully', (done) => {
         chai.request('localhost:3000')
             .put('/api/v1/issues/1')
@@ -397,7 +456,7 @@ describe('tests /issues endpoint', () => {
             });
     });
 
-    it('PUT/ issues fails due to absence of jwt token', (done) => {
+    it('PUT/:id issues fails due to absence of jwt token', (done) => {
         chai.request('localhost:3000')
             .put('/api/v1/issues/1')
             .send({issue_name: c.issueName})
@@ -419,7 +478,7 @@ describe('tests /issues endpoint', () => {
             });
     });
 
-    it('PUT/ issues fails due to invalid of issue_type', (done) => {
+    it('PUT/:id issues fails due to invalid of issue_type', (done) => {
         chai.request('localhost:3000')
             .put('/api/v1/issues/1')
             .set('Authorization', `Bearer ${accessToken}`)
@@ -442,7 +501,7 @@ describe('tests /issues endpoint', () => {
             });
     });
 
-    it('PUT/ issues fails due to invalid of issue_status', (done) => {
+    it('PUT/:id issues fails due to invalid of issue_status', (done) => {
         chai.request('localhost:3000')
             .put('/api/v1/issues/1')
             .set('Authorization', `Bearer ${accessToken}`)
@@ -465,7 +524,7 @@ describe('tests /issues endpoint', () => {
             });
     });
 
-    it('PUT/ issues fails due to invalid of issue_priority', (done) => {
+    it('PUT/:id issues fails due to invalid of issue_priority', (done) => {
         chai.request('localhost:3000')
             .put('/api/v1/issues/1')
             .set('Authorization', `Bearer ${accessToken}`)
@@ -635,6 +694,7 @@ describe('tests /issues endpoint', () => {
                 assert.equal(res.body.status, 200);
                 assert.isNotEmpty(res.body.data);
                 assert.isTrue(res.body.data.deleted);
+                assert.isNotEmpty(res.body.data.assignee);
                 done();
             });
     });
@@ -674,7 +734,6 @@ describe('tests /issues endpoint', () => {
                 done();
             });
     });
-
 });
 
 describe('tests /issues endpoint which assigns an issue to a sprint', () => {
@@ -781,7 +840,6 @@ describe('tests /issues endpoint which assigns an issue to a sprint', () => {
             }); //end pre-requisite #1
     });
 
-
     it('POST/ issues and assigns to a sprint successfully', (done) => {
         chai.request('localhost:3000')
             .post('/api/v1/issues')
@@ -829,7 +887,6 @@ describe('tests /issues endpoint which assigns an issue to a sprint', () => {
             });
     });
 
-
     it('PUT/ issues successfully', (done) => {
         chai.request('localhost:3000')
             .put('/api/v1/issues/1')
@@ -866,5 +923,4 @@ describe('tests /issues endpoint which assigns an issue to a sprint', () => {
                 done();
             });
     });
-
 })
