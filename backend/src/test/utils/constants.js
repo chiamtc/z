@@ -16,3 +16,8 @@ export const issuePriority = faker.random.arrayElement(['lowest', 'low', 'medium
 export const issueStatus = faker.random.arrayElement(['open', 'in_progress', 'reopened', 'resolved', 'closed','building', 'build_broken', 'to_do' ,'done']);
 export const issueDesc = faker.lorem.sentences();
 export const issueStoryPoint = faker.random.number();
+
+export const sprintName = faker.lorem.words();
+export const sprintGoals = faker.lorem.sentences();
+export const sprintStartDate = faker.date.past();
+export const sprintEndDate = faker.date.future();

@@ -28,7 +28,7 @@ IssueRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
     createIssue_ref.set('parent_issue_id', 'd');
     createIssue_ref.set('project_id', 'd');
     createIssue_ref.set('reporter', 'd');
-    // updateMe_ref.set('sprint_id', 'd'); //TODO: uncomment when doing sprint
+    createIssue_ref.set('sprint_id', 'd'); //TODO: uncomment when doing sprint
 
     try {
         SanitizerUtil.sanitize_reference = createIssue_ref;
@@ -115,8 +115,7 @@ IssueRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
     updateIssue_ref.set('issue_story_point', 'f');
     updateIssue_ref.set('issue_status', 's');
     updateIssue_ref.set('parent_issue_id', 'd'); //TODO: move function. aka move current sub task id to another task
-    // updateIssue_ref.set('sprint_id', 'd'); //TODO: uncomment when doing sprint
-    // updateIssue_ref.set('reporter', 'd');
+    updateIssue_ref.set('sprint_id', 'd'); //TODO: uncomment when doing sprint
     try {
         SanitizerUtil.sanitize_reference = updateIssue_ref;
         SanitizerUtil.sanitize_request(req.body);

@@ -17,9 +17,10 @@ describe('tests /histories endpoint', ()=>{
         await exec('npm run db:person:up');
         await exec('npm run db:project:up');
         await exec('npm run db:proj_parti:up');
+        await exec('npm run db:sprint:up');
+        await exec('npm run db:history:up');
         await exec('npm run db:issue:up');
         await exec('npm run db:parti_issue:up');
-        await exec('npm run db:history:up');
 
         //Pre-requisite #1 = creates a user
         chai.request('localhost:3000')

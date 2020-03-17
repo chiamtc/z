@@ -6,7 +6,7 @@ create table issue(
     issue_id serial primary key,
     parent_issue_id int,
     project_id int not null,
---  TODO: add  sprint_id int,
+    sprint_id int,
     issue_name text not null,
     issue_desc text,
     issue_story_point decimal,
@@ -18,8 +18,8 @@ create table issue(
     updated_date timestamptz,
     foreign key (reporter) references person(person_id),
     foreign key(project_id) references project(project_id),
-    foreign key(parent_issue_id) references issue(issue_id)
---  TODO: add  foreign key(sprint_id) references sprint(sprint_id)
+    foreign key(parent_issue_id) references issue(issue_id),
+    foreign key(sprint_id) references sprint(sprint_id)
 );
 
 alter table issue alter column created_date set default now();
