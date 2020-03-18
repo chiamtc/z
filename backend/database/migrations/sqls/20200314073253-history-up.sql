@@ -1,4 +1,4 @@
-create type history_action_enum as enum('created', 'updated', 'removed');
+create type history_action_enum as enum('created', 'updated', 'removed', 'deleted');
 create table history(
     history_id serial primary key,
     issue_id int not null,

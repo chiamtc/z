@@ -87,14 +87,21 @@ CommentRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
 
 CommentRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
+    const SanitizerUtil = new Sanitizer();
     try {
         const {id} = req.params;
+        const {person_id} = req.user;
         await client.query('begin');
 
         //delete comment
         const deleteComment_Q_values = [id];
         const deleteComment_Q = `delete from comment where comment_id=$1 returning *`;
         const deleteComment_R = await client.query(deleteComment_Q, deleteComment_Q_values);
+
+        //add to history
+        const createHistory_Q_values = [id, person_id, QueryConstant.HISTORY_ACTION_DELETED, null, null, 'comment'];
+        const createHistory_Q = `insert into history (issue_id, person_id, history_action, new_content, old_content, updated_content_type) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
+        const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
 
         await client.query('commit');
         if (deleteComment_R.rows.length !== 0) {

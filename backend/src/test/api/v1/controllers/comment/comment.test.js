@@ -268,7 +268,6 @@ describe('tests /comments endpoint', () => {
             });
     });
 
-
     it('DELETE/:id comments belong to an issue successfully', (done) => {
         chai.request('localhost:3000')
             .delete('/api/v1/comments/2')
