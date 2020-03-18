@@ -11,9 +11,6 @@ const AuthUserRouter = Router();
 const RequestUtil = new HttpRequest();
 const ResponseUtil = new HttpResponse();
 
-AuthUserRouter.get('/', async (req, res) => {
-    res.status(200).json({status: '/users is working'})
-});
 
 AuthUserRouter.post('/signup', async (req, res) => {
     const client = await db.client();

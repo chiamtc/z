@@ -108,9 +108,6 @@ ProjectRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
         const body = req.body;
         await client.query('begin');
 
-        const deleteProjParti_Q = `delete from project_participant where project_id=$1`;
-        const deleteProjParti_R = await client.query(deleteProjParti_Q, deleteProject_Q_values);
-
         const deleteProject_Q = `delete from project where project_id=$1 returning *`;
         const deleteProject_R = await client.query(deleteProject_Q, deleteProject_Q_values);
         await client.query('commit');

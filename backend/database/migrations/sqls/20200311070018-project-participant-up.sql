@@ -1,10 +1,9 @@
 create table project_participant(
-    project_id int references project(project_id),
+    project_id int references project(project_id) on delete cascade,
     participant_id int references person(person_id),
     created_date timestamptz
 --    updated_date timestamptz
 );
--- TODO; on cascade delete
 -- automatically set those dates upon creation
 alter table project_participant alter column created_date set default now();
 --alter table project_participant alter column updated_date set default now();

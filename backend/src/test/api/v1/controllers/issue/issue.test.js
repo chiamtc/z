@@ -102,7 +102,6 @@ describe('tests /issues endpoint', () => {
             .end((err, res) => {
                 const body = res.body.data;
                 assert.equal(res.body.status, 200);
-                console.log(res.body);
                 assert.isNotEmpty(res.body.data);
                 assert.equal(body.issue_name, c.issueName);
                 assert.equal(body.issue_type, 'task');

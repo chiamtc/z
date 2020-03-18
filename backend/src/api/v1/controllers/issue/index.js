@@ -141,12 +141,12 @@ IssueRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
         f = SanitizerUtil.build_query('put');
         h = SanitizerUtil.build_query('post');
 
-    }catch(e) {
+    } catch (e) {
         ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
         ResponseUtil.responds(res);
     }
 
-    try{
+    try {
         await client.query('begin');
 
         // create history regarding to issue update
@@ -163,7 +163,7 @@ IssueRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
         const updateIssue_R = await client.query(updateIssue_Q, updateIssue_Q_values);
 
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, updateIssue_R.rows[0]);
+        ResponseUtil.setResponse(200, ResponseFlag.OK, updateIssue_R.rows.length === 0 ? {} : updateIssue_R.rows[0]);
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
@@ -174,7 +174,6 @@ IssueRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-//has cascading delete
 IssueRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
     try {
@@ -188,7 +187,7 @@ IssueRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
         if (deleteIssue_R.rows.length !== 0) {
             ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true, issue: deleteIssue_R.rows});
         } else {
-            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted:false});
+            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: false});
         }
 
         await client.query('commit');
@@ -203,7 +202,6 @@ IssueRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
     //update issue set sprint_id = null where sprint_id=$1 returning *;
 });
 
-
 IssueRouter.put('/reporter/:id', authenticate_jwtStrategy, async (req, res) => {
     let f, h;
     const client = await db.client();
@@ -216,11 +214,11 @@ IssueRouter.put('/reporter/:id', authenticate_jwtStrategy, async (req, res) => {
         SanitizerUtil.sanitize_request(req.body);
         f = SanitizerUtil.build_query('put');
         h = SanitizerUtil.build_query('post');
-    }catch(e) {
+    } catch (e) {
         ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
         ResponseUtil.responds(res);
     }
-    try{
+    try {
         await client.query('begin');
 
         // create history regarding to issue update
@@ -242,7 +240,7 @@ IssueRouter.put('/reporter/:id', authenticate_jwtStrategy, async (req, res) => {
         const updateIssue_R = await client.query(updateIssue_Q, updateIssue_Q_values);
 
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, updateIssue_R.rows[0]);
+        ResponseUtil.setResponse(200, ResponseFlag.OK, updateIssue_R.rows.length === 0 ? {} : ResponseUtil.setResponse(200, ResponseFlag.OK, updateIssue_R.rows[0]));
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
@@ -287,9 +285,8 @@ IssueRouter.post('/assignee/:id', authenticate_jwtStrategy, async (req, res) => 
         const createHistory_Q_values = [req.user.person_id, id, QueryConstant.HISTORY_ACTION_UPDATED, null, f.query_val[0], 'assignee'];
         const createHistory_Q = `insert into history(person_id, issue_id, history_action, old_content, new_content, updated_content_type) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
         const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
-
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, getParticipant_R.rows[0]);
+        ResponseUtil.setResponse(200, ResponseFlag.OK, getParticipant_R.rows.length === 0 ? {} : getParticipant_R.rows[0]);
         ResponseUtil.responds(res);
 
     } catch (e) {
@@ -338,9 +335,9 @@ IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, async (req, res) =
         const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
 
         await client.query('commit');
-        if(createParticipant_Issue_R.rows.length !== 0){
-            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true, assignee:getParticipant_R.rows[0]});
-        }else {
+        if (createParticipant_Issue_R.rows.length !== 0) {
+            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true, assignee: getParticipant_R.rows[0]});
+        } else {
             ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: false});
         }
 
@@ -354,7 +351,7 @@ IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, async (req, res) =
     }
 });
 
-//TODO: get all where task = req.params
+//TODO: get all where task = req.params ?
 
 export default IssueRouter;
 /*

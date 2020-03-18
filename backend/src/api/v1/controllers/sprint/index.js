@@ -101,7 +101,7 @@ SprintRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
         const updateSprint_Q = `update sprint set ${f.query_string} where sprint_id=$${updateSprint_Q_values.length} returning *`;
         const updateSprint_R = await client.query(updateSprint_Q, updateSprint_Q_values);
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, updateSprint_R.rows[0]);
+        ResponseUtil.setResponse(200, ResponseFlag.OK, updateSprint_R.rows.length ===0 ? {} : updateSprint_R.rows[0]);
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');

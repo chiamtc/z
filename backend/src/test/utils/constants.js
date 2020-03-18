@@ -21,3 +21,5 @@ export const sprintName = faker.lorem.words();
 export const sprintGoals = faker.lorem.sentences();
 export const sprintStartDate = faker.date.past();
 export const sprintEndDate = faker.date.future();
+
+export const commentContent = faker.lorem.paragraphs();
