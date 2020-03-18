@@ -227,4 +227,165 @@ describe('tests /sprints endpoint', () => {
                 done();
             });
     });
+
+    it('PUT/:id sprints successfully', (done) => {
+        chai.request('localhost:3000')
+            .put('/api/v1/sprints/1')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({
+                sprint_name: c.sprintName,
+                sprint_goal: c.sprintGoals,
+                start_date: c.sprintStartDate,
+                end_date: c.sprintEndDate
+            })
+            .end((err, res) => {
+                const body = res.body.data;
+                assert.equal(res.body.status, 200);
+                assert.isNotEmpty(res.body.data);
+                assert.equal(body.sprint_name, c.sprintName);
+                assert.equal(body.sprint_goal, c.sprintGoals);
+
+                expect(body).to.have.property('sprint_id');
+                expect(body).to.have.property('sprint_name');
+                expect(body).to.have.property('sprint_goal');
+                expect(body).to.have.property('start_date');
+                expect(body).to.have.property('end_date');
+                expect(body).to.have.property('created_date');
+                expect(body).to.have.property('updated_date');
+                done();
+            });
+    });
+
+    it('PUT/:id sprints fails due to absence of jwt', (done) => {
+        chai.request('localhost:3000')
+            .put('/api/v1/sprints/1')
+            .send({
+                sprint_name: c.sprintName,
+                sprint_goal: c.sprintGoals,
+                start_date: c.sprintStartDate,
+                end_date: c.sprintEndDate
+            })
+            .end((err, res) => {
+                const body = res.body;
+                assert.equal(body.status, 500);
+
+                expect(body).to.have.property('message');
+                expect(body).to.not.have.property('sprint_id');
+                expect(body).to.not.have.property('sprint_name');
+                expect(body).to.not.have.property('sprint_goal');
+                expect(body).to.not.have.property('start_date');
+                expect(body).to.not.have.property('end_date');
+                expect(body).to.not.have.property('created_date');
+                expect(body).to.not.have.property('updated_date');
+                done();
+            });
+    });
+
+    it('PUT/:id sprints fails due to start date is later than end date', (done) => {
+        chai.request('localhost:3000')
+            .put('/api/v1/sprints/1')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({
+                sprint_name: c.sprintName,
+                sprint_goal: c.sprintGoals,
+                start_date: c.sprintEndDate,
+                end_date: c.sprintStartDate,
+                project_id: projectId
+            })
+            .end((err, res) => {
+                const body = res.body;
+                assert.equal(body.status, 500);
+
+                expect(body).to.have.property('message');
+                expect(body).to.not.have.property('sprint_id');
+                expect(body).to.not.have.property('sprint_name');
+                expect(body).to.not.have.property('sprint_goal');
+                expect(body).to.not.have.property('start_date');
+                expect(body).to.not.have.property('end_date');
+                expect(body).to.not.have.property('created_date');
+                expect(body).to.not.have.property('updated_date');
+                done();
+            });
+    });
+
+    it('DELETE/:id sprints successfully', (done) => {
+        let issueId;
+        chai.request('localhost:3000')
+            .post('/api/v1/issues')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({
+                issue_name: c.issueName,
+                issue_type: 'task',
+                issue_desc: c.issueDesc,
+                issue_story_point: c.issueStoryPoint,
+                issue_priority: c.issuePriority,
+                issue_status: c.issueStatus,
+                reporter: 1,
+                sprint_id:1,
+                project_id: projectId
+            })
+            .end((err, res) => {
+                const body = res.body.data;
+                assert.equal(res.body.status, 200);
+                assert.isNotEmpty(res.body.data);
+                issueId = res.body.data.issue_id;
+                assert.equal(body.issue_name, c.issueName);
+                assert.equal(body.issue_type, 'task');
+                assert.equal(body.issue_priority, c.issuePriority);
+                assert.equal(body.issue_status, c.issueStatus);
+                assert.equal(body.issue_desc, c.issueDesc);
+                assert.equal(body.issue_story_point, c.issueStoryPoint);
+                assert.equal(body.reporter, 1);
+                assert.equal(body.project_id, projectId);
+                assert.isNull(body.parent_issue_id);
+
+                expect(body).to.have.property('project_id');
+                expect(body).to.have.property('issue_id');
+                expect(body).to.have.property('parent_issue_id');
+                expect(body).to.have.property('issue_name');
+                expect(body).to.have.property('issue_type');
+                expect(body).to.have.property('issue_desc');
+                expect(body).to.have.property('issue_story_point');
+                expect(body).to.have.property('issue_desc');
+                expect(body).to.have.property('issue_priority');
+                expect(body).to.have.property('issue_status');
+                expect(body).to.have.property('reporter');
+                expect(body).to.have.property('created_date');
+                expect(body).to.have.property('updated_date');
+
+                chai.request('localhost:3000')
+                    .delete('/api/v1/sprints/1')
+                    .set('Authorization', `Bearer ${accessToken}`)
+                    .end((err, res) => {
+                        const body = res.body.data;
+                        assert.equal(res.body.status, 200);
+                        assert.isNotEmpty(res.body.data);
+                        assert.isTrue(body.deleted);
+                        const deletedSprint = body.sprint;
+                        const deletedIssue = body.issues;
+                        assert.instanceOf(deletedIssue, Array);
+                        assert.equal(deletedSprint.sprint_name, c.sprintName);
+                        assert.equal(deletedSprint.sprint_goal, c.sprintGoals);
+
+                        expect(deletedSprint).to.have.property('sprint_id');
+                        expect(deletedSprint).to.have.property('sprint_name');
+                        expect(deletedSprint).to.have.property('sprint_goal');
+                        expect(deletedSprint).to.have.property('start_date');
+                        expect(deletedSprint).to.have.property('end_date');
+                        expect(deletedSprint).to.have.property('created_date');
+                        expect(deletedSprint).to.have.property('updated_date');
+
+                        assert.equal(deletedIssue[0].issue_name, c.issueName);
+                        assert.equal(deletedIssue[0].issue_type, 'task');
+                        assert.equal(deletedIssue[0].issue_priority, c.issuePriority);
+                        assert.equal(deletedIssue[0].issue_status, c.issueStatus);
+                        assert.equal(deletedIssue[0].issue_desc, c.issueDesc);
+                        assert.equal(deletedIssue[0].issue_story_point, c.issueStoryPoint);
+                        assert.equal(deletedIssue[0].reporter, 1);
+                        assert.equal(deletedIssue[0].project_id, projectId);
+                        assert.isNull(deletedIssue[0].parent_issue_id);
+                        done();
+                    });
+            });
+    });
 });

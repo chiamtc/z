@@ -11,11 +11,15 @@ create table project(
     updated_date timestamptz
 );
 
+-- automatically set those dates upon creation
 alter table project alter column created_date set default now();
 alter table project alter column updated_date set default now();
 
+-- index on project name
+create index project_name_index on project (project_name);
+
 --use enum type
-ALTER TABLE project ALTER COLUMN project_type TYPE project_type_enum USING project_type::text::project_type_enum;
+alter table project alter COLUMN project_type type project_type_enum using project_type::text::project_type_enum;
 
 -- trigger to trigger update_timestamp function when there's an update
 create trigger trigger_project_updated_date

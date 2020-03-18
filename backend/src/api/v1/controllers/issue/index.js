@@ -141,6 +141,12 @@ IssueRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
         f = SanitizerUtil.build_query('put');
         h = SanitizerUtil.build_query('post');
 
+    }catch(e) {
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
+        ResponseUtil.responds(res);
+    }
+
+    try{
         await client.query('begin');
 
         // create history regarding to issue update
@@ -168,6 +174,14 @@ IssueRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
+/*
+TODO: delete
+endpoint to delete
+delete an issue - /:id
+delete issue with sub-issue? should the front end
+ */
+
+
 IssueRouter.put('/reporter/:id', authenticate_jwtStrategy, async (req, res) => {
     let f, h;
     const client = await db.client();
@@ -180,7 +194,11 @@ IssueRouter.put('/reporter/:id', authenticate_jwtStrategy, async (req, res) => {
         SanitizerUtil.sanitize_request(req.body);
         f = SanitizerUtil.build_query('put');
         h = SanitizerUtil.build_query('post');
-
+    }catch(e) {
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
+        ResponseUtil.responds(res);
+    }
+    try{
         await client.query('begin');
 
         // create history regarding to issue update
@@ -301,7 +319,7 @@ IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, async (req, res) =
         if(createParticipant_Issue_R.rows.length !== 0){
             ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true, assignee:getParticipant_R.rows[0]});
         }else {
-            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: false, assignee:{}});
+            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: false});
         }
 
         ResponseUtil.responds(res);
@@ -313,6 +331,8 @@ IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, async (req, res) =
         await client.release();
     }
 });
+
+//TODO: get all where task = req.params
 
 export default IssueRouter;
 /*

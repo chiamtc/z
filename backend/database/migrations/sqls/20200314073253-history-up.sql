@@ -9,9 +9,9 @@ create table history(
     updated_content_type varchar(255),
     created_date timestamptz
 );
-
+-- automatically set those dates upon creation
 alter table history alter column created_date set default now();
 
 --use enum type
-ALTER TABLE history ALTER COLUMN history_action type history_action_enum USING history_action::text::history_action_enum;
+alter table history alter COLUMN history_action type history_action_enum using history_action::text::history_action_enum;
 

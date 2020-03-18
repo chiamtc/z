@@ -5,8 +5,8 @@ create table participant_issue(
     participant_type participant_type_enum,
     created_date timestamptz
 );
-
+-- automatically set those dates upon creation
 alter table participant_issue alter column created_date set default now();
 
 --use enum type
-ALTER TABLE issue ALTER COLUMN issue_type type issue_type_enum USING issue_type::text::issue_type_enum;
+alter table issue alter COLUMN issue_type type issue_type_enum using issue_type::text::issue_type_enum;

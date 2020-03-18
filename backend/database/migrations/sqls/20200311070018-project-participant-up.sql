@@ -4,7 +4,7 @@ create table project_participant(
     created_date timestamptz
 --    updated_date timestamptz
 );
-
+-- automatically set those dates upon creation
 alter table project_participant alter column created_date set default now();
 --alter table project_participant alter column updated_date set default now();
 

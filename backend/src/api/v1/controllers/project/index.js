@@ -117,7 +117,7 @@ ProjectRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
         if (deleteProject_R.rows.length !== 0) {
             ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true, projects: deleteProject_R.rows[0]});
         } else {
-            ResponseUtil.setResponse(200, ResponseFlag.OK, ResponseFlag.OBJECT_NOT_DELETED);
+            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted:false});
         }
         ResponseUtil.responds(res);
     } catch (e) {
@@ -143,13 +143,20 @@ ProjectRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
         SanitizerUtil.sanitize_reference = updateProject_ref;
         SanitizerUtil.sanitize_request(req.body);
         f = SanitizerUtil.build_query('put');
+    } catch (e) {
+        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
+        ResponseUtil.responds(res);
+    }
+
+    try{
         const updateProject_Q_values = [...f.query_val, id]
         const updateProject_Q = `update project set ${f.query_string} where project_id=$${updateProject_Q_values.length} returning *`;
         const updateProject_R = await client.query(updateProject_Q, updateProject_Q_values);
         ResponseUtil.setResponse(200, ResponseFlag.OK, updateProject_R.rows[0]);
         ResponseUtil.responds(res);
-    } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
+    }catch(e){
+        await client.query('rollback');
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {
         await client.release();

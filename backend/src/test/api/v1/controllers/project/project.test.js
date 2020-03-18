@@ -333,7 +333,7 @@ describe('tests /project endpoint', () => {
             .set('Authorization', `Bearer ${accessToken}`)
             .end((err, res) => {
                 assert.equal(res.body.status, 200);
-                assert.equal(res.body.data, ResponseFlag.OBJECT_NOT_DELETED);
+                assert.isFalse(res.body.data.deleted);
                 done();
             });
     });

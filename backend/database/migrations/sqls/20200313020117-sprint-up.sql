@@ -10,5 +10,15 @@ create table sprint(
     foreign key(project_id) references project(project_id)
 );
 
+-- index sprint name
+create index sprint_name_index on sprint (sprint_name);
+
+-- automatically set those dates upon creation
 alter table sprint alter column created_date set default now();
 alter table sprint alter column updated_date set default now();
+
+-- trigger to trigger update_timestamp function when there's an update
+create trigger trigger_sprint_updated_date
+before update on sprint
+for each row
+execute procedure update_timestamp();
