@@ -125,7 +125,7 @@ SprintRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
         const deleteSprint_R = await client.query(deleteSprint_Q, query_values);
 
         if (deleteSprint_R.rows.length !== 0) {
-            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true, sprint:deleteSprint_R.rows[0], issues: releaseIssue_R.rows});
+            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true, sprint:deleteSprint_R.rows[0] ,issues: releaseIssue_R.rows});
         } else {
             ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted:false});
         }

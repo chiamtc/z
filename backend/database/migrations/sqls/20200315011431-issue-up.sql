@@ -18,7 +18,7 @@ create table issue(
     updated_date timestamptz,
     foreign key (reporter) references person(person_id),
     foreign key(project_id) references project(project_id),
-    foreign key(parent_issue_id) references issue(issue_id),
+    foreign key(parent_issue_id) references issue(issue_id) on delete cascade,
     foreign key(sprint_id) references sprint(sprint_id)
 );
 

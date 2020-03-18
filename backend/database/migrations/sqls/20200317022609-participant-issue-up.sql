@@ -1,7 +1,7 @@
 create type participant_type_enum as enum('reporter', 'assignee');
 create table participant_issue(
     participant_id int references person(person_id),
-    issue_id int references issue(issue_id),
+    issue_id int references issue(issue_id) on delete cascade,
     participant_type participant_type_enum,
     created_date timestamptz
 );

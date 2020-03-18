@@ -174,12 +174,34 @@ IssueRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-/*
-TODO: delete
-endpoint to delete
-delete an issue - /:id
-delete issue with sub-issue? should the front end
- */
+//has cascading delete
+IssueRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
+    const client = await db.client();
+    try {
+        const {id} = req.params;
+        await client.query('begin');
+        const query_values = [id];
+
+        const deleteIssue_Q = `delete from issue where issue_id=$1 returning *`;
+        const deleteIssue_R = await client.query(deleteIssue_Q, query_values);
+
+        if (deleteIssue_R.rows.length !== 0) {
+            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true, issue: deleteIssue_R.rows});
+        } else {
+            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted:false});
+        }
+
+        await client.query('commit');
+        ResponseUtil.responds(res);
+    } catch (e) {
+        await client.query('rollback');
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.responds(res);
+    } finally {
+        await client.release();
+    }
+    //update issue set sprint_id = null where sprint_id=$1 returning *;
+});
 
 
 IssueRouter.put('/reporter/:id', authenticate_jwtStrategy, async (req, res) => {

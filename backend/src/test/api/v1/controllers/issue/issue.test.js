@@ -19,9 +19,9 @@ describe('tests /issues endpoint', () => {
         await exec('npm run db:project:up');
         await exec('npm run db:proj_parti:up');
         await exec('npm run db:sprint:up');
-        await exec('npm run db:history:up');
         await exec('npm run db:issue:up');
         await exec('npm run db:parti_issue:up');
+        await exec('npm run db:history:up');
 
         //Pre-requisite #1 = creates a user
         chai.request('localhost:3000')
@@ -102,6 +102,7 @@ describe('tests /issues endpoint', () => {
             .end((err, res) => {
                 const body = res.body.data;
                 assert.equal(res.body.status, 200);
+                console.log(res.body);
                 assert.isNotEmpty(res.body.data);
                 assert.equal(body.issue_name, c.issueName);
                 assert.equal(body.issue_type, 'task');
@@ -728,9 +729,37 @@ describe('tests /issues endpoint', () => {
             .send({assignee: 10})
             .end((err, res) => {
                 const body = res.body;
-                assert.equal(body.status, 200);
-                assert.isFalse(body.data.deleted);
+                console.log(body);
+                assert.equal(body.status, 500);
 
+                done();
+            });
+    });
+
+    it('DELETE/:id issues successfully', (done) => {
+        chai.request('localhost:3000')
+            .delete('/api/v1/issues/1')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({assignee: 1})
+            .end((err, res) => {
+                const body = res.body.data;
+                assert.equal(res.body.status, 200);
+                assert.isNotEmpty(res.body.data);
+                assert.isTrue(res.body.data.deleted);
+                assert.isNotEmpty(res.body.data.issue);
+                done();
+            });
+    });
+
+    it('DELETE/:id fails due to invalid issue id', (done) => {
+        chai.request('localhost:3000')
+            .delete('/api/v1/issues/10')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({assignee: 1})
+            .end((err, res) => {
+                const body = res.body.data;
+                assert.equal(res.body.status, 200);
+                assert.isFalse(res.body.data.deleted);
                 done();
             });
     });
