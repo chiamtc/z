@@ -1,30 +1,26 @@
+import chai, {assert, expect} from "chai";
+import _ from "lodash";
 import util from 'util';
-import chai, {assert, expect} from 'chai';
-import chaiHttp from 'chai-http';
-import _ from 'lodash';
-
 const exec = util.promisify(require('child_process').exec);
 import * as c from '../../../../utils/constants'
 import ResponseFlag from "../../../../../constants/response_flag";
+import chaiHttp from "chai-http";
 
 chai.use(chaiHttp);
-describe('tests /comments endpoint', () => {
+describe('tests /histories endpoint', ()=>{
     let accessToken;
     let projectId;
-    let personId;
-    let issueId;
     beforeAll(async (done) => {
-        // await exec('npm run db:down');
+        await exec('npm run db:down');
         await exec('npm run db:general:up');
         await exec('npm run db:user:up');
         await exec('npm run db:person:up');
         await exec('npm run db:project:up');
         await exec('npm run db:proj_parti:up');
         await exec('npm run db:sprint:up');
-        await exec('npm run db:issue_history:up');
         await exec('npm run db:issue:up');
-        await exec('npm run db:comment:up');
         await exec('npm run db:parti_issue:up');
+        await exec('npm run db:issue_history:up');
 
         //Pre-requisite #1 = creates a user
         chai.request('localhost:3000')
@@ -38,6 +34,7 @@ describe('tests /comments endpoint', () => {
             })
             .end((err, res) => {
                 console.log(_.isEmpty(res.body) ? null : 'user signed up successfully in login test beforeAll hook');
+
                 //Pre-requisite #2 = login the user;
                 chai.request('localhost:3000')
                     .post('/api/v1/users/login')
@@ -48,7 +45,7 @@ describe('tests /comments endpoint', () => {
                         assert.isNotEmpty(res.body.data);
                         assert.equal(body.email, c.email);
                         accessToken = res.body.data.accessToken;
-                        personId = body.auth_user_id;
+
                         expect(body).to.have.property('auth_user_id');
                         expect(body).to.have.property('email');
                         expect(body).to.have.property('created_date');
@@ -81,6 +78,8 @@ describe('tests /comments endpoint', () => {
                                 expect(body).to.have.property('project_lead');
                                 expect(body).to.have.property('created_date');
                                 expect(body).to.have.property('updated_date');
+
+
                                 chai.request('localhost:3000')
                                     .post('/api/v1/issues')
                                     .set('Authorization', `Bearer ${accessToken}`)
@@ -98,7 +97,6 @@ describe('tests /comments endpoint', () => {
                                         const body = res.body.data;
                                         assert.equal(res.body.status, 200);
                                         assert.isNotEmpty(res.body.data);
-                                        issueId = body.issue_id;
                                         assert.equal(body.issue_name, c.issueName);
                                         assert.equal(body.issue_type, 'task');
                                         assert.equal(body.issue_priority, c.issuePriority);
@@ -123,169 +121,52 @@ describe('tests /comments endpoint', () => {
                                         expect(body).to.have.property('created_date');
                                         expect(body).to.have.property('updated_date');
                                         done();
-                                    }); //end pre-requisite #3
-                            });
+                                    });
+                            }); //end pre-requisite #3
                     }); //end pre-requisite #2
             }); //end pre-requisite #1
     });
 
-    it('POST/ comments successfully', (done) => {
+    it('GET/ issue histories successfully', (done) => {
         chai.request('localhost:3000')
-            .post('/api/v1/comments')
-            .set('Authorization', `Bearer ${accessToken}`)
-            .send({
-                content: c.commentContent,
-                issue_id: issueId,
-                person_id: personId
-            })
-            .end((err, res) => {
-                const body = res.body.data;
-                assert.equal(res.body.status, 200);
-                assert.isNotEmpty(res.body.data);
-                assert.equal(body.content, c.commentContent);
-                assert.equal(body.issue_id, issueId);
-                assert.equal(body.person_id, personId);
-
-                expect(body).to.have.property('comment_id');
-                expect(body).to.have.property('content');
-                expect(body).to.have.property('issue_id');
-                expect(body).to.have.property('person_id');
-                expect(body).to.have.property('created_date');
-                expect(body).to.have.property('updated_date');
-                done();
-            });
-    });
-
-    it('POST/ comments fails due to absence of jwt token', (done) => {
-        chai.request('localhost:3000')
-            .post('/api/v1/comments')
-            .send({
-                content: c.commentContent,
-                issue_id: issueId,
-                person_id: personId
-            })
-            .end((err, res) => {
-                const body = res.body;
-                assert.equal(body.status, 500);
-
-                expect(body).to.have.property('message');
-                expect(body).to.not.have.property('comment_id');
-                expect(body).to.not.have.property('content');
-                expect(body).to.not.have.property('issue_id');
-                expect(body).to.not.have.property('person_id');
-                expect(body).to.not.have.property('created_date');
-                expect(body).to.not.have.property('updated_date');
-                done();
-            });
-    });
-
-    it('PUT/ comments successfully', (done) => {
-        chai.request('localhost:3000')
-            .put('/api/v1/comments/1')
-            .set('Authorization', `Bearer ${accessToken}`)
-            .send({content: c.commentContent})
-            .end((err, res) => {
-                const body = res.body.data;
-                assert.equal(res.body.status, 200);
-                assert.isNotEmpty(res.body.data);
-                assert.equal(body.content, c.commentContent);
-
-                expect(body).to.have.property('comment_id');
-                expect(body).to.have.property('content');
-                expect(body).to.have.property('issue_id');
-                expect(body).to.have.property('person_id');
-                expect(body).to.have.property('created_date');
-                expect(body).to.have.property('updated_date');
-                done();
-            });
-    });
-
-    it('PUT/ comments fails due to absence of jwt', (done) => {
-        chai.request('localhost:3000')
-            .put('/api/v1/comments/1')
-            .send({content: c.commentContent})
-            .end((err, res) => {
-                const body = res.body;
-                assert.equal(res.body.status, 500);
-
-                expect(body).to.have.property('message');
-                expect(body).to.not.have.property('comment_id');
-                expect(body).to.not.have.property('content');
-                expect(body).to.not.have.property('issue_id');
-                expect(body).to.not.have.property('person_id');
-                expect(body).to.not.have.property('created_date');
-                expect(body).to.not.have.property('updated_date');
-                done();
-            });
-    });
-
-    it('GET/:id comments belong to an issue successfully', (done) => {
-        chai.request('localhost:3000')
-            .get('/api/v1/comments/1')
+            .get('/api/v1/issue_histories/1')
             .set('Authorization', `Bearer ${accessToken}`)
             .end((err, res) => {
                 const data = res.body.data;
+                console.log(res.body);
                 assert.equal(res.body.status, 200);
                 assert.isNotEmpty(res.body.data);
                 assert.equal(data.total_count, 1);
                 assert.isFalse(data.has_more);
-                const comments = res.body.data.comments;
-                assert.instanceOf(comments, Array);
-                assert.equal(comments[0].content, c.commentContent);
-                assert.equal(comments[0].issue_id, issueId);
-                assert.equal(comments[0].person_id, personId);
+                const histories = data.issue_histories;
+                assert.instanceOf(histories, Array);
 
-                expect(comments[0]).to.have.property('comment_id');
-                expect(comments[0]).to.have.property('content');
-                expect(comments[0]).to.have.property('issue_id');
-                expect(comments[0]).to.have.property('person_id');
-                expect(comments[0]).to.have.property('created_date');
-                expect(comments[0]).to.have.property('updated_date');
+                expect(histories[0]).to.have.property('issue_history_id');
+                expect(histories[0]).to.have.property('issue_id');
+                expect(histories[0]).to.have.property('person_id');
+                expect(histories[0]).to.have.property('issue_history_action');
+                expect(histories[0]).to.have.property('new_content');
+                expect(histories[0]).to.have.property('old_content');
+                expect(histories[0]).to.have.property('updated_content_type');
                 done();
             });
     });
 
-    it('DELETE/:id comments belong to an issue successfully', (done) => {
+    it('GET/ issue histories fails due to absence of jwt', (done) => {
         chai.request('localhost:3000')
-            .delete('/api/v1/comments/1')
-            .set('Authorization', `Bearer ${accessToken}`)
+            .get('/api/v1/issue_histories/1')
             .end((err, res) => {
-                const data = res.body.data.comment;
-                assert.equal(res.body.status, 200);
-                assert.isNotEmpty(res.body.data);
-                assert.equal(data.content, c.commentContent);
-                assert.equal(data.issue_id, issueId);
-                assert.equal(data.person_id, personId);
-                assert.isTrue(res.body.data.deleted);
-
-                expect(data).to.have.property('comment_id');
-                expect(data).to.have.property('content');
-                expect(data).to.have.property('issue_id');
-                expect(data).to.have.property('person_id');
-                expect(data).to.have.property('created_date');
-                expect(data).to.have.property('updated_date');
+                const body = res.body;
+                assert.equal(body.status, 500);
+                expect(body).to.have.property('message');
+                expect(body).to.not.have.property('issue_history_id');
+                expect(body).to.not.have.property('issue_id');
+                expect(body).to.not.have.property('person_id');
+                expect(body).to.not.have.property('issue_history_action');
+                expect(body).to.not.have.property('new_content');
+                expect(body).to.not.have.property('old_content');
+                expect(body).to.not.have.property('updated_content_type');
                 done();
             });
     });
-
-    it('DELETE/:id comments belong to an issue successfully', (done) => {
-        chai.request('localhost:3000')
-            .delete('/api/v1/comments/2')
-            .set('Authorization', `Bearer ${accessToken}`)
-            .end((err, res) => {
-
-                const data = res.body.data;
-                assert.equal(res.body.status, 200);
-                assert.isNotEmpty(res.body.data);
-                assert.isFalse(res.body.data.deleted);
-
-                expect(data).to.not.have.property('comment_id');
-                expect(data).to.not.have.property('content');
-                expect(data).to.not.have.property('issue_id');
-                expect(data).to.not.have.property('person_id');
-                expect(data).to.not.have.property('created_date');
-                expect(data).to.not.have.property('updated_date');
-                done();
-            });
-    });
-});
+})

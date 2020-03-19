@@ -50,8 +50,8 @@ IssueRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
 
         //create history
         const {rows} = createIssue_R;
-        const createHistory_Q_values = [req.user.person_id, rows[0].issue_id, QueryConstant.HISTORY_ACTION_CREATED];
-        const createHistory_Q = `insert into history(person_id, issue_id, history_action) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
+        const createHistory_Q_values = [req.user.person_id, rows[0].issue_id, QueryConstant.ISSUE_HISTORY_ACTION_CREATED];
+        const createHistory_Q = `insert into issue_history(person_id, issue_id, issue_history_action) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
         const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
 
         await client.query('commit');
@@ -151,8 +151,8 @@ IssueRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
 
         // create history regarding to issue update
         h.query_string.split(',').map(async (str, i) => {
-            const createHistory_Q_values = [parseInt(req.user.person_id), QueryConstant.HISTORY_ACTION_UPDATED, h.query_val[i], str, id];
-            const createHistory_Q = `insert into history (issue_id, person_id, history_action, new_content, old_content, updated_content_type)
+            const createHistory_Q_values = [parseInt(req.user.person_id), QueryConstant.ISSUE_HISTORY_ACTION_UPDATED, h.query_val[i], str, id];
+            const createHistory_Q = `insert into issue_history(issue_id, person_id, issue_history_action, new_content, old_content, updated_content_type)
                                 select i.issue_id, $1, $2, $3, i.${str}, $4 from issue i where issue_id = $5`;
             const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
         });
@@ -223,8 +223,8 @@ IssueRouter.put('/reporter/:id', authenticate_jwtStrategy, async (req, res) => {
 
         // create history regarding to issue update
         h.query_string.split(',').map(async (str, i) => {
-            const createHistory_Q_values = [parseInt(req.user.person_id), QueryConstant.HISTORY_ACTION_UPDATED, h.query_val[i], str, id];
-            const createHistory_Q = `insert into history (issue_id, person_id, history_action, new_content, old_content, updated_content_type)
+            const createHistory_Q_values = [parseInt(req.user.person_id), QueryConstant.ISSUE_HISTORY_ACTION_UPDATED, h.query_val[i], str, id];
+            const createHistory_Q = `insert into issue_history(issue_id, person_id, issue_history_action, new_content, old_content, updated_content_type)
                                 select i.issue_id, $1, $2, $3, i.${str}, $4 from issue i where issue_id = $5`;
             const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
         });
@@ -238,9 +238,8 @@ IssueRouter.put('/reporter/:id', authenticate_jwtStrategy, async (req, res) => {
         const updateIssue_Q_values = [f.query_val[0], id];
         const updateIssue_Q = `update issue set reporter=$1 where issue_id=$2 returning *`;
         const updateIssue_R = await client.query(updateIssue_Q, updateIssue_Q_values);
-
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, updateIssue_R.rows.length === 0 ? {} : ResponseUtil.setResponse(200, ResponseFlag.OK, updateIssue_R.rows[0]));
+        ResponseUtil.setResponse(200, ResponseFlag.OK, updateIssue_R.rows.length === 0 ? {} : updateIssue_R.rows[0]);
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
@@ -273,7 +272,7 @@ IssueRouter.post('/assignee/:id', authenticate_jwtStrategy, async (req, res) => 
         await client.query('begin');
 
         //create issue_participant
-        const createParticipant_Issue_Q_values = [f.query_val[0], id, QueryConstant.PARTICIPANT_TYPE_ASSGINEE];
+        const createParticipant_Issue_Q_values = [f.query_val[0], id, QueryConstant.PARTICIPANT_TYPE_ASSIGNEE];
         const createParticipant_Issue_Q = `insert into participant_issue(participant_id, issue_id, participant_type) values($1,$2,$3) returning participant_id`;
         const createParticipant_Issue_R = await client.query(createParticipant_Issue_Q, createParticipant_Issue_Q_values);
 
@@ -282,8 +281,8 @@ IssueRouter.post('/assignee/:id', authenticate_jwtStrategy, async (req, res) => 
         const getParticipant_R = await client.query(getParticipant_Q, getParticipant_Q_values);
 
         //create history
-        const createHistory_Q_values = [req.user.person_id, id, QueryConstant.HISTORY_ACTION_UPDATED, null, f.query_val[0], 'assignee'];
-        const createHistory_Q = `insert into history(person_id, issue_id, history_action, old_content, new_content, updated_content_type) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
+        const createHistory_Q_values = [req.user.person_id, id, QueryConstant.ISSUE_HISTORY_ACTION_UPDATED, null, f.query_val[0], 'assignee'];
+        const createHistory_Q = `insert into issue_history(person_id, issue_id, issue_history_action, old_content, new_content, updated_content_type) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
         const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
         await client.query('commit');
         ResponseUtil.setResponse(200, ResponseFlag.OK, getParticipant_R.rows.length === 0 ? {} : getParticipant_R.rows[0]);
@@ -320,7 +319,7 @@ IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, async (req, res) =
         await client.query('begin');
 
         //create issue_participant
-        const createParticipant_Issue_Q_values = [f.query_val[0], id, QueryConstant.PARTICIPANT_TYPE_ASSGINEE];
+        const createParticipant_Issue_Q_values = [f.query_val[0], id, QueryConstant.PARTICIPANT_TYPE_ASSIGNEE];
         const createParticipant_Issue_Q = `delete from participant_issue where participant_id=$1 and issue_id=$2 and participant_type=$3 returning *`;
         const createParticipant_Issue_R = await client.query(createParticipant_Issue_Q, createParticipant_Issue_Q_values);
 
@@ -330,8 +329,8 @@ IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, async (req, res) =
         const getParticipant_R = await client.query(getParticipant_Q, getParticipant_Q_values);
 
         //create history
-        const createHistory_Q_values = [req.user.person_id, id, QueryConstant.HISTORY_ACTION_REMOVED, null, f.query_val[0], 'assignee'];
-        const createHistory_Q = `insert into history(person_id, issue_id, history_action, old_content, new_content, updated_content_type) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
+        const createHistory_Q_values = [req.user.person_id, id, QueryConstant.ISSUE_HISTORY_ACTION_REMOVED, null, f.query_val[0], 'assignee'];
+        const createHistory_Q = `insert into issue_history(person_id, issue_id, issue_history_action, old_content, new_content, updated_content_type) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
         const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
 
         await client.query('commit');

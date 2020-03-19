@@ -20,8 +20,8 @@ describe('tests /issues endpoint', () => {
         await exec('npm run db:proj_parti:up');
         await exec('npm run db:sprint:up');
         await exec('npm run db:issue:up');
+        await exec('npm run db:issue_history:up');
         await exec('npm run db:parti_issue:up');
-        await exec('npm run db:history:up');
 
         //Pre-requisite #1 = creates a user
         chai.request('localhost:3000')
@@ -728,7 +728,6 @@ describe('tests /issues endpoint', () => {
             .send({assignee: 10})
             .end((err, res) => {
                 const body = res.body;
-                console.log(body);
                 assert.equal(body.status, 500);
 
                 done();
@@ -777,7 +776,7 @@ describe('tests /issues endpoint which assigns an issue to a sprint', () => {
         await exec('npm run db:sprint:up');
         await exec('npm run db:issue:up');
         await exec('npm run db:parti_issue:up');
-        await exec('npm run db:history:up');
+        await exec('npm run db:issue_history:up');
 
         //Pre-requisite #1 = creates a user
         chai.request('localhost:3000')

@@ -98,13 +98,12 @@ CommentRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
         const deleteComment_Q = `delete from comment where comment_id=$1 returning *`;
         const deleteComment_R = await client.query(deleteComment_Q, deleteComment_Q_values);
 
-        //add to history
-        const createHistory_Q_values = [id, person_id, QueryConstant.HISTORY_ACTION_DELETED, null, null, 'comment'];
-        const createHistory_Q = `insert into history (issue_id, person_id, history_action, new_content, old_content, updated_content_type) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
-        const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
-
-        await client.query('commit');
         if (deleteComment_R.rows.length !== 0) {
+            const createHistory_Q_values = [id, deleteComment_R.rows[0].issue_id, person_id, QueryConstant.COMMENT_HISTORY_ACTION_DELETED];
+            const createHistory_Q = `insert into comment_history(comment_id, issue_id, person_id, comment_history_action) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
+            const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
+
+            await client.query('commit');
             ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true, comment: deleteComment_R.rows[0]});
         } else ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: false});
         ResponseUtil.responds(res);

@@ -19,7 +19,7 @@ describe('tests /sprints endpoint', () => {
         await exec('npm run db:project:up');
         await exec('npm run db:proj_parti:up');
         await exec('npm run db:sprint:up');
-        await exec('npm run db:history:up');
+        await exec('npm run db:issue_history:up');
         await exec('npm run db:issue:up');
         await exec('npm run db:parti_issue:up');
 
@@ -326,6 +326,7 @@ describe('tests /sprints endpoint', () => {
             })
             .end((err, res) => {
                 const body = res.body.data;
+                console.log(res.body);
                 assert.equal(res.body.status, 200);
                 assert.isNotEmpty(res.body.data);
                 issueId = res.body.data.issue_id;
