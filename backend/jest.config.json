@@ -4,5 +4,6 @@
     "collectCoverageFrom": [
         "<rootDir>/src/api/v1",
         "<rootDir>/src/auth"
-    ]
+    ],
+    "testTimeout": 10000
 }

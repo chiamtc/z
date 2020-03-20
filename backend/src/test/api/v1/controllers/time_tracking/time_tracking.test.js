@@ -8,7 +8,8 @@ import * as c from '../../../../utils/constants'
 import ResponseFlag from "../../../../../constants/response_flag";
 
 chai.use(chaiHttp);
-describe('tests /comments endpoint', () => {
+
+describe('tests /time_tracking endpoint', () => {
     let accessToken;
     let projectId;
     let personId;
@@ -26,6 +27,8 @@ describe('tests /comments endpoint', () => {
         await exec('npm run db:parti_issue:up');
         await exec('npm run db:comment:up');
         await exec('npm run db:comment_history:up');
+        await exec('npm run db:time_tracking:up');
+        await exec('npm run db:time_tracking_history:up');
 
         //Pre-requisite #1 = creates a user
         chai.request('localhost:3000')
@@ -40,7 +43,6 @@ describe('tests /comments endpoint', () => {
             .end((err, res) => {
                 console.log(_.isEmpty(res.body) ? null : 'user signed up successfully in login test beforeAll hook');
                 //Pre-requisite #2 = login the user;
-
                 chai.request('localhost:3000')
                     .post('/api/v1/users/login')
                     .send({username: c.username, password: c.password})
@@ -57,6 +59,7 @@ describe('tests /comments endpoint', () => {
                         expect(body).to.have.property('updated_date');
                         expect(body).to.have.property('last_login');
                         //TODO: assert and expect jwt token later
+
                         //Pre-requisite #3 = creates a project
                         chai.request('localhost:3000')
                             .post('/api/v1/projects')
@@ -130,164 +133,168 @@ describe('tests /comments endpoint', () => {
             }); //end pre-requisite #1
     });
 
-    it('POST/ comments successfully', (done) => {
+    it('POST/ time tracking successfully', (done) => {
         chai.request('localhost:3000')
-            .post('/api/v1/comments')
+            .post('/api/v1/time_tracking')
             .set('Authorization', `Bearer ${accessToken}`)
             .send({
-                content: c.commentContent,
+                original_estimation: 1000,
                 issue_id: issueId,
-                person_id: personId
+                time_spent: 300,
+                remaining_estimation: 1000,
             })
             .end((err, res) => {
                 const body = res.body.data;
                 assert.equal(res.body.status, 201);
                 assert.isNotEmpty(res.body.data);
-                assert.equal(body.content, c.commentContent);
-                assert.equal(body.issue_id, issueId);
-                assert.equal(body.person_id, personId);
-
-                expect(body).to.have.property('comment_id');
-                expect(body).to.have.property('content');
+                assert.equal(body.original_estimation, 1000);
+                assert.equal(body.time_spent, 300);
+                assert.equal(body.remaining_estimation, 1000);
+                expect(body).to.have.property('time_tracking_id');
                 expect(body).to.have.property('issue_id');
-                expect(body).to.have.property('person_id');
+                expect(body).to.have.property('original_estimation');
+                expect(body).to.have.property('remaining_estimation');
+                expect(body).to.have.property('time_spent');
+                expect(body).to.have.property('start_date');
                 expect(body).to.have.property('created_date');
                 expect(body).to.have.property('updated_date');
                 done();
             });
     });
-    it('POST/ comments fails due to absence of jwt token', (done) => {
+
+    it('POST/ fails due to absence of jwt', (done) => {
         chai.request('localhost:3000')
-            .post('/api/v1/comments')
+            .post('/api/v1/time_tracking')
             .send({
-                content: c.commentContent,
+                original_estimation: 1000,
                 issue_id: issueId,
-                person_id: personId
+                time_spent: 300,
+                remaining_estimation: 1000,
             })
             .end((err, res) => {
                 const body = res.body;
                 assert.equal(body.status, 500);
 
                 expect(body).to.have.property('message');
-                expect(body).to.not.have.property('comment_id');
-                expect(body).to.not.have.property('content');
+                expect(body).to.not.have.property('time_tracking_id');
                 expect(body).to.not.have.property('issue_id');
-                expect(body).to.not.have.property('person_id');
+                expect(body).to.not.have.property('original_estimation');
+                expect(body).to.not.have.property('remaining_estimation');
+                expect(body).to.not.have.property('time_spent');
+                expect(body).to.not.have.property('start_date');
                 expect(body).to.not.have.property('created_date');
                 expect(body).to.not.have.property('updated_date');
                 done();
             });
     });
 
-    it('PUT/ comments successfully', (done) => {
+    it('GET/ time tracking successfully', (done) => {
         chai.request('localhost:3000')
-            .put('/api/v1/comments/1')
+            .get('/api/v1/time_tracking/1')
             .set('Authorization', `Bearer ${accessToken}`)
-            .send({content: c.commentContent})
             .end((err, res) => {
                 const body = res.body.data;
                 assert.equal(res.body.status, 200);
                 assert.isNotEmpty(res.body.data);
-                assert.equal(body.content, c.commentContent);
-
-                expect(body).to.have.property('comment_id');
-                expect(body).to.have.property('content');
+                assert.equal(body.original_estimation, 1000);
+                assert.equal(body.time_spent, 300);
+                assert.equal(body.remaining_estimation, 1000);
+                expect(body).to.have.property('time_tracking_id');
                 expect(body).to.have.property('issue_id');
-                expect(body).to.have.property('person_id');
+                expect(body).to.have.property('original_estimation');
+                expect(body).to.have.property('remaining_estimation');
+                expect(body).to.have.property('time_spent');
+                expect(body).to.have.property('start_date');
                 expect(body).to.have.property('created_date');
                 expect(body).to.have.property('updated_date');
                 done();
             });
     });
 
-    it('PUT/ comments fails due to absence of jwt', (done) => {
+    it('PUT/ time tracking time_spent successfully', (done) => {
         chai.request('localhost:3000')
-            .put('/api/v1/comments/1')
-            .send({content: c.commentContent})
+            .put('/api/v1/time_tracking/1')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({
+                // original_estimation: 1000,
+                // issue_id: issueId,
+                time_spent: 300,
+                // remaining_estimation: 1000,
+            })
             .end((err, res) => {
-                const body = res.body;
-                assert.equal(res.body.status, 500);
-
-                expect(body).to.have.property('message');
-                expect(body).to.not.have.property('comment_id');
-                expect(body).to.not.have.property('content');
-                expect(body).to.not.have.property('issue_id');
-                expect(body).to.not.have.property('person_id');
-                expect(body).to.not.have.property('created_date');
-                expect(body).to.not.have.property('updated_date');
+                const body = res.body.data;
+                assert.equal(res.body.status, 200);
+                assert.isNotEmpty(res.body.data);
+                assert.equal(body.original_estimation, 1000);
+                assert.equal(body.time_spent, 600);
+                assert.equal(body.remaining_estimation, 700);
+                expect(body).to.have.property('time_tracking_id');
+                expect(body).to.have.property('issue_id');
+                expect(body).to.have.property('original_estimation');
+                expect(body).to.have.property('remaining_estimation');
+                expect(body).to.have.property('time_spent');
+                expect(body).to.have.property('start_date');
+                expect(body).to.have.property('created_date');
+                expect(body).to.have.property('updated_date');
                 done();
             });
     });
 
-    it('GET/:id comments belong to an issue successfully', (done) => {
+    it('PUT/ time tracking remaining_estimation successfully', (done) => {
         chai.request('localhost:3000')
-            .get('/api/v1/comments/1')
+            .put('/api/v1/time_tracking/1')
             .set('Authorization', `Bearer ${accessToken}`)
+            .send({
+                // original_estimation: 1000,
+                // issue_id: issueId,
+                time_spent: 300,
+                remaining_estimation: 1000,
+            })
             .end((err, res) => {
-                const data = res.body.data;
-                console.log(res.body);
+                const body = res.body.data;
                 assert.equal(res.body.status, 200);
                 assert.isNotEmpty(res.body.data);
-                assert.equal(data.total_count, 1);
-                assert.isFalse(data.has_more);
-                const comments = res.body.data.comments;
-                assert.instanceOf(comments, Array);
-                assert.equal(comments[0].content, c.commentContent);
-                assert.equal(comments[0].issue_id, issueId);
-                assert.equal(comments[0].person_id, personId);
-
-                expect(comments[0]).to.have.property('comment_id');
-                expect(comments[0]).to.have.property('content');
-                expect(comments[0]).to.have.property('issue_id');
-                expect(comments[0]).to.have.property('person_id');
-                expect(comments[0]).to.have.property('created_date');
-                expect(comments[0]).to.have.property('updated_date');
+                assert.equal(body.original_estimation, 1000);
+                assert.equal(body.time_spent, 900);
+                assert.equal(body.remaining_estimation, 1000);
+                expect(body).to.have.property('time_tracking_id');
+                expect(body).to.have.property('issue_id');
+                expect(body).to.have.property('original_estimation');
+                expect(body).to.have.property('remaining_estimation');
+                expect(body).to.have.property('time_spent');
+                expect(body).to.have.property('start_date');
+                expect(body).to.have.property('created_date');
+                expect(body).to.have.property('updated_date');
                 done();
             });
     });
 
-  /*  it('DELETE/:id comments belong to an issue successfully', (done) => {
+    it('PUT/ time tracking original_estimation successfully', (done) => {
         chai.request('localhost:3000')
-            .delete('/api/v1/comments/1')
+            .put('/api/v1/time_tracking/1')
             .set('Authorization', `Bearer ${accessToken}`)
+            .send({
+                original_estimation: 2000,
+                // issue_id: issueId,
+                // time_spent: 300,
+                // remaining_estimation: 1000,
+            })
             .end((err, res) => {
-                console.log(res.body);
-                const data = res.body.data.comment;
+                const body = res.body.data;
                 assert.equal(res.body.status, 200);
                 assert.isNotEmpty(res.body.data);
-                assert.equal(data.content, c.commentContent);
-                assert.equal(data.issue_id, issueId);
-                assert.equal(data.person_id, personId);
-                assert.isTrue(res.body.data.deleted);
-
-                expect(data).to.have.property('comment_id');
-                expect(data).to.have.property('content');
-                expect(data).to.have.property('issue_id');
-                expect(data).to.have.property('person_id');
-                expect(data).to.have.property('created_date');
-                expect(data).to.have.property('updated_date');
+                assert.equal(body.original_estimation, 2000);
+                assert.equal(body.time_spent, 900);
+                assert.equal(body.remaining_estimation, 1000);
+                expect(body).to.have.property('time_tracking_id');
+                expect(body).to.have.property('issue_id');
+                expect(body).to.have.property('original_estimation');
+                expect(body).to.have.property('remaining_estimation');
+                expect(body).to.have.property('time_spent');
+                expect(body).to.have.property('start_date');
+                expect(body).to.have.property('created_date');
+                expect(body).to.have.property('updated_date');
                 done();
             });
     });
-
-    it('DELETE/:id comments belong to an issue successfully', (done) => {
-        chai.request('localhost:3000')
-            .delete('/api/v1/comments/2')
-            .set('Authorization', `Bearer ${accessToken}`)
-            .end((err, res) => {
-
-                const data = res.body.data;
-                assert.equal(res.body.status, 200);
-                assert.isNotEmpty(res.body.data);
-                assert.isFalse(res.body.data.deleted);
-
-                expect(data).to.not.have.property('comment_id');
-                expect(data).to.not.have.property('content');
-                expect(data).to.not.have.property('issue_id');
-                expect(data).to.not.have.property('person_id');
-                expect(data).to.not.have.property('created_date');
-                expect(data).to.not.have.property('updated_date');
-                done();
-            });
-    });*/
-});
+})

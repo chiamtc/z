@@ -64,7 +64,7 @@ describe('tests /histories endpoint', ()=>{
                             })
                             .end((err, res) => {
                                 const body = res.body.data;
-                                assert.equal(res.body.status, 200);
+                                assert.equal(res.body.status,  201);
                                 assert.isNotEmpty(res.body.data);
                                 projectId = body.project_id;
                                 assert.equal(body.project_name, c.projectName);
@@ -95,7 +95,7 @@ describe('tests /histories endpoint', ()=>{
                                     })
                                     .end((err, res) => {
                                         const body = res.body.data;
-                                        assert.equal(res.body.status, 200);
+                                        assert.equal(res.body.status, 201);
                                         assert.isNotEmpty(res.body.data);
                                         assert.equal(body.issue_name, c.issueName);
                                         assert.equal(body.issue_type, 'task');

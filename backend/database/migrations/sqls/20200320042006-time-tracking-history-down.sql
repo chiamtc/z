@@ -1,0 +1,2 @@
+drop table time_tracking_history;
+drop type time_tracking_history_action_enum;

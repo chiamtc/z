@@ -39,7 +39,7 @@ SprintRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
         const createSprint_R = await client.query(createSprint_Q, f.query_val);
 
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, createSprint_R.rows[0]);
+        ResponseUtil.setResponse(201, ResponseFlag.OK, createSprint_R.rows[0]);
         ResponseUtil.responds(res);
 
     } catch (e) {

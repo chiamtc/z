@@ -79,7 +79,7 @@ describe('tests /project endpoint', () => {
             })
             .end((err, res) => {
                 const body = res.body.data;
-                assert.equal(res.body.status, 200);
+                assert.equal(res.body.status, 201);
                 assert.isNotEmpty(res.body.data);
                 assert.equal(body.project_name, c.projectName);
                 assert.equal(body.project_desc, c.projectDesc);

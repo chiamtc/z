@@ -65,7 +65,7 @@ describe('tests /sprints endpoint', () => {
                             })
                             .end((err, res) => {
                                 const body = res.body.data;
-                                assert.equal(res.body.status, 200);
+                                assert.equal(res.body.status, 201);
                                 assert.isNotEmpty(res.body.data);
                                 projectId = body.project_id;
                                 assert.equal(body.project_name, c.projectName);
@@ -98,7 +98,7 @@ describe('tests /sprints endpoint', () => {
             })
             .end((err, res) => {
                 const body = res.body.data;
-                assert.equal(res.body.status, 200);
+                assert.equal(res.body.status, 201);
                 assert.isNotEmpty(res.body.data);
                 assert.equal(body.sprint_name, c.sprintName);
                 assert.equal(body.sprint_goal, c.sprintGoals);
@@ -327,7 +327,7 @@ describe('tests /sprints endpoint', () => {
             .end((err, res) => {
                 const body = res.body.data;
                 console.log(res.body);
-                assert.equal(res.body.status, 200);
+                assert.equal(res.body.status, 201);
                 assert.isNotEmpty(res.body.data);
                 issueId = res.body.data.issue_id;
                 assert.equal(body.issue_name, c.issueName);

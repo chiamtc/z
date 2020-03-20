@@ -11,14 +11,16 @@ chai.use(chaiHttp);
 describe('tests /comment_histories endpoint', () => {
     let accessToken, projectId, issueId, personId, commentId;
     beforeAll(async (done) => {
+        await exec('npm run db:down');
+        await exec('npm run db:general:up');
         await exec('npm run db:user:up');
         await exec('npm run db:person:up');
         await exec('npm run db:project:up');
         await exec('npm run db:proj_parti:up');
         await exec('npm run db:sprint:up');
         await exec('npm run db:issue:up');
-        await exec('npm run db:parti_issue:up');
         await exec('npm run db:issue_history:up');
+        await exec('npm run db:parti_issue:up');
         await exec('npm run db:comment:up');
         await exec('npm run db:comment_history:up');
 
@@ -64,7 +66,7 @@ describe('tests /comment_histories endpoint', () => {
                             })
                             .end((err, res) => {
                                 const body = res.body.data;
-                                assert.equal(res.body.status, 200);
+                                assert.equal(res.body.status, 201);
                                 assert.isNotEmpty(res.body.data);
                                 projectId = body.project_id;
                                 assert.equal(body.project_name, c.projectName);
@@ -95,7 +97,7 @@ describe('tests /comment_histories endpoint', () => {
                                     })
                                     .end((err, res) => {
                                         const body = res.body.data;
-                                        assert.equal(res.body.status, 200);
+                                        assert.equal(res.body.status, 201);
                                         assert.isNotEmpty(res.body.data);
                                         issueId = body.issue_id;
                                         assert.equal(body.issue_name, c.issueName);
@@ -133,7 +135,7 @@ describe('tests /comment_histories endpoint', () => {
                                             .end((err, res) => {
                                                 const body = res.body.data;
                                                 commentId = body.commentId;
-                                                assert.equal(res.body.status, 200);
+                                                assert.equal(res.body.status, 201);
                                                 assert.isNotEmpty(res.body.data);
 
                                                 assert.equal(body.content, c.commentContent);

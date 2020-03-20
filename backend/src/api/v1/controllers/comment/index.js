@@ -35,9 +35,8 @@ CommentRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
         //create comment
         const createComment_Q = `insert into comment (${f.query_string}) values (${SanitizerUtil.build_values(f.query_val)}) returning *`;
         const createComment_R = await client.query(createComment_Q, f.query_val);
-
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, createComment_R.rows[0]);
+        ResponseUtil.setResponse(201, ResponseFlag.OK, createComment_R.rows[0]);
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');

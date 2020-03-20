@@ -43,13 +43,13 @@
 -- update time_tracking set time_spent=0, original_estimation = 0, remaining_estimation=0 where issue_id=2;
 -- update time_tracking set remaining_estimation=1000;
 -- update time_tracking set original_estimation = 1000;
-update time_tracking set time_spent = time_spent + 400,remaining_estimation = case
-                    when remaining_estimation > 0 then
-                        remaining_estimation - 400
-                            else
-                                1000
-                        end
-where issue_id =2 returning *;
+-- update time_tracking set time_spent = time_spent + 400,remaining_estimation = case
+--                     when remaining_estimation > 0 then
+--                         remaining_estimation - 400
+--                             else
+--                                 1000
+--                         end
+-- where issue_id =2 returning *;
 
--- select * from time_tracking;
+select * from time_tracking;
 -- delete from time_tracking where time_tracking_id =2;

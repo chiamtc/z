@@ -20,8 +20,8 @@ describe('tests /issues endpoint', () => {
         await exec('npm run db:proj_parti:up');
         await exec('npm run db:sprint:up');
         await exec('npm run db:issue:up');
-        await exec('npm run db:issue_history:up');
         await exec('npm run db:parti_issue:up');
+        await exec('npm run db:issue_history:up');
 
         //Pre-requisite #1 = creates a user
         chai.request('localhost:3000')
@@ -65,7 +65,7 @@ describe('tests /issues endpoint', () => {
                             })
                             .end((err, res) => {
                                 const body = res.body.data;
-                                assert.equal(res.body.status, 200);
+                                assert.equal(res.body.status, 201);
                                 assert.isNotEmpty(res.body.data);
                                 projectId = body.project_id;
                                 assert.equal(body.project_name, c.projectName);
@@ -101,7 +101,7 @@ describe('tests /issues endpoint', () => {
             })
             .end((err, res) => {
                 const body = res.body.data;
-                assert.equal(res.body.status, 200);
+                assert.equal(res.body.status, 201);
                 assert.isNotEmpty(res.body.data);
                 assert.equal(body.issue_name, c.issueName);
                 assert.equal(body.issue_type, 'task');
@@ -147,7 +147,7 @@ describe('tests /issues endpoint', () => {
             })
             .end((err, res) => {
                 const body = res.body.data;
-                assert.equal(res.body.status, 200);
+                assert.equal(res.body.status, 201);
                 assert.isNotEmpty(res.body.data);
                 assert.equal(body.issue_name, c.issueName);
                 assert.equal(body.issue_type, 'subtask');
@@ -820,7 +820,7 @@ describe('tests /issues endpoint which assigns an issue to a sprint', () => {
                             })
                             .end((err, res) => {
                                 const body = res.body.data;
-                                assert.equal(res.body.status, 200);
+                                assert.equal(res.body.status, 201);
                                 assert.isNotEmpty(res.body.data);
                                 projectId = body.project_id;
                                 assert.equal(body.project_name, c.projectName);
@@ -847,7 +847,7 @@ describe('tests /issues endpoint which assigns an issue to a sprint', () => {
                                     })
                                     .end((err, res) => {
                                         const body = res.body.data;
-                                        assert.equal(res.body.status, 200);
+                                        assert.equal(res.body.status, 201);
                                         assert.isNotEmpty(res.body.data);
                                         sprintId = body.sprint_id;
                                         assert.equal(body.sprint_name, c.sprintName);
@@ -884,7 +884,7 @@ describe('tests /issues endpoint which assigns an issue to a sprint', () => {
             })
             .end((err, res) => {
                 const body = res.body.data;
-                assert.equal(res.body.status, 200);
+                assert.equal(res.body.status, 201);
                 assert.isNotEmpty(res.body.data);
                 assert.equal(body.issue_name, c.issueName);
                 assert.equal(body.issue_type, 'task');

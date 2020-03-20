@@ -32,9 +32,8 @@ ProjectRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
             first_name: req.user.first_name,
             last_name: req.user.last_name
         };
-
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, response);
+        ResponseUtil.setResponse(201, ResponseFlag.OK, response);
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');

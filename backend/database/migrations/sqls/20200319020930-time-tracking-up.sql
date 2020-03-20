@@ -6,7 +6,7 @@ create table time_tracking(
     start_date timestamptz,
     created_date timestamptz,
     updated_date timestamptz,
-    issue_id int references issue(issue_id) on delete cascade
+    issue_id int unique references issue(issue_id) on delete cascade
 );
 
 -- automatically set those dates upon creation
