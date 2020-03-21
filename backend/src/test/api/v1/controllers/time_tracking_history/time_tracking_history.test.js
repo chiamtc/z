@@ -1,15 +1,18 @@
-import chai, {assert, expect} from "chai";
-import _ from "lodash";
 import util from 'util';
-const exec = util.promisify(require('child_process').exec);
+import chai, {assert, expect} from 'chai';
+import chaiHttp from 'chai-http';
+import _ from 'lodash';
 import * as c from '../../../../utils/constants'
 import ResponseFlag from "../../../../../constants/response_flag";
-import chaiHttp from "chai-http";
 
+const exec = util.promisify(require('child_process').exec);
 chai.use(chaiHttp);
-describe('tests /histories endpoint', ()=>{
+
+describe('tests /time_tracking endpoint', () => {
     let accessToken;
     let projectId;
+    let personId;
+    let issueId;
     beforeAll(async (done) => {
         await exec('npm run db:down');
         await exec('npm run db:general:up');
@@ -19,8 +22,12 @@ describe('tests /histories endpoint', ()=>{
         await exec('npm run db:proj_parti:up');
         await exec('npm run db:sprint:up');
         await exec('npm run db:issue:up');
-        await exec('npm run db:parti_issue:up');
         await exec('npm run db:issue_history:up');
+        await exec('npm run db:parti_issue:up');
+        await exec('npm run db:comment:up');
+        await exec('npm run db:comment_history:up');
+        await exec('npm run db:time_tracking:up');
+        await exec('npm run db:time_tracking_history:up');
 
         //Pre-requisite #1 = creates a user
         chai.request('localhost:3000')
@@ -34,7 +41,6 @@ describe('tests /histories endpoint', ()=>{
             })
             .end((err, res) => {
                 console.log(_.isEmpty(res.body) ? null : 'user signed up successfully in login test beforeAll hook');
-
                 //Pre-requisite #2 = login the user;
                 chai.request('localhost:3000')
                     .post('/api/v1/users/login')
@@ -45,7 +51,7 @@ describe('tests /histories endpoint', ()=>{
                         assert.isNotEmpty(res.body.data);
                         assert.equal(body.email, c.email);
                         accessToken = res.body.data.accessToken;
-
+                        personId = body.auth_user_id;
                         expect(body).to.have.property('auth_user_id');
                         expect(body).to.have.property('email');
                         expect(body).to.have.property('created_date');
@@ -64,7 +70,7 @@ describe('tests /histories endpoint', ()=>{
                             })
                             .end((err, res) => {
                                 const body = res.body.data;
-                                assert.equal(res.body.status,  201);
+                                assert.equal(res.body.status, 201);
                                 assert.isNotEmpty(res.body.data);
                                 projectId = body.project_id;
                                 assert.equal(body.project_name, c.projectName);
@@ -78,8 +84,6 @@ describe('tests /histories endpoint', ()=>{
                                 expect(body).to.have.property('project_lead');
                                 expect(body).to.have.property('created_date');
                                 expect(body).to.have.property('updated_date');
-
-
                                 chai.request('localhost:3000')
                                     .post('/api/v1/issues')
                                     .set('Authorization', `Bearer ${accessToken}`)
@@ -97,6 +101,7 @@ describe('tests /histories endpoint', ()=>{
                                         const body = res.body.data;
                                         assert.equal(res.body.status, 201);
                                         assert.isNotEmpty(res.body.data);
+                                        issueId = body.issue_id;
                                         assert.equal(body.issue_name, c.issueName);
                                         assert.equal(body.issue_type, 'task');
                                         assert.equal(body.issue_priority, c.issuePriority);
@@ -120,53 +125,88 @@ describe('tests /histories endpoint', ()=>{
                                         expect(body).to.have.property('reporter');
                                         expect(body).to.have.property('created_date');
                                         expect(body).to.have.property('updated_date');
-                                        done();
-                                    });
-                            }); //end pre-requisite #3
+                                        chai.request('localhost:3000')
+                                            .post('/api/v1/time_tracking')
+                                            .set('Authorization', `Bearer ${accessToken}`)
+                                            .send({
+                                                original_estimation: 1000,
+                                                issue_id: issueId,
+                                                time_spent: 300,
+                                                remaining_estimation: 1000,
+                                            })
+                                            .end((err, res) => {
+                                                const body = res.body.data;
+                                                assert.equal(res.body.status, 201);
+                                                assert.isNotEmpty(res.body.data);
+                                                assert.equal(body.original_estimation, 1000);
+                                                assert.equal(body.time_spent, 300);
+                                                assert.equal(body.remaining_estimation, 1000);
+                                                expect(body).to.have.property('time_tracking_id');
+                                                expect(body).to.have.property('issue_id');
+                                                expect(body).to.have.property('original_estimation');
+                                                expect(body).to.have.property('remaining_estimation');
+                                                expect(body).to.have.property('time_spent');
+                                                expect(body).to.have.property('start_date');
+                                                expect(body).to.have.property('created_date');
+                                                expect(body).to.have.property('updated_date');
+                                                done();
+                                            });
+                                    }); //end pre-requisite #3
+                            });
                     }); //end pre-requisite #2
             }); //end pre-requisite #1
     });
 
-    it('GET/issues/:issueId issue histories successfully', (done) => {
+    it('GET/time_tracking_histories/issues/:issueId time tracking successfully', (done) => {
         chai.request('localhost:3000')
-            .get('/api/v1/issue_histories/issues/1')
+            .get(`/api/v1/time_tracking_histories/issues/${issueId}`)
             .set('Authorization', `Bearer ${accessToken}`)
             .end((err, res) => {
                 const data = res.body.data;
-                console.log(res.body);
                 assert.equal(res.body.status, 200);
                 assert.isNotEmpty(res.body.data);
-                assert.equal(data.total_count, 1);
+                assert.equal(data.total_count, 4);
                 assert.isFalse(data.has_more);
-                const histories = data.issue_histories;
-                assert.instanceOf(histories, Array);
+                const time_tracking_histories = data.time_tracking_histories;
+                assert.instanceOf(time_tracking_histories, Array);
 
-                expect(histories[0]).to.have.property('issue_history_id');
-                expect(histories[0]).to.have.property('issue_id');
-                expect(histories[0]).to.have.property('person_id');
-                expect(histories[0]).to.have.property('issue_history_action');
-                expect(histories[0]).to.have.property('new_content');
-                expect(histories[0]).to.have.property('old_content');
-                expect(histories[0]).to.have.property('updated_content_type');
+                expect(time_tracking_histories[0]).to.have.property('time_tracking_history_id');
+                expect(time_tracking_histories[0]).to.have.property('time_tracking_id');
+                expect(time_tracking_histories[0]).to.have.property('issue_id');
+                expect(time_tracking_histories[0]).to.have.property('person_id');
+                expect(time_tracking_histories[0]).to.have.property('time_tracking_history_action');
+                expect(time_tracking_histories[0]).to.have.property('new_content');
+                expect(time_tracking_histories[0]).to.have.property('old_content');
+                expect(time_tracking_histories[0]).to.have.property('updated_content_type');
+                expect(time_tracking_histories[0]).to.have.property('created_date');
                 done();
             });
     });
 
-    it('GET/issues/:issueId issue histories fails due to absence of jwt', (done) => {
+    it('GET/time_tracking_histories/time_trackings/:timeTrackingId time tracking successfully', (done) => {
         chai.request('localhost:3000')
-            .get('/api/v1/issue_histories/issues/1')
+            .get('/api/v1/time_tracking_histories/time_trackings/1')
+            .set('Authorization', `Bearer ${accessToken}`)
             .end((err, res) => {
-                const body = res.body;
-                assert.equal(body.status, 500);
-                expect(body).to.have.property('message');
-                expect(body).to.not.have.property('issue_history_id');
-                expect(body).to.not.have.property('issue_id');
-                expect(body).to.not.have.property('person_id');
-                expect(body).to.not.have.property('issue_history_action');
-                expect(body).to.not.have.property('new_content');
-                expect(body).to.not.have.property('old_content');
-                expect(body).to.not.have.property('updated_content_type');
+                const data = res.body.data;
+                assert.equal(res.body.status, 200);
+                assert.isNotEmpty(res.body.data);
+                assert.equal(data.total_count, 4);
+                assert.isFalse(data.has_more);
+                const time_tracking_histories = data.time_tracking_histories;
+                assert.instanceOf(time_tracking_histories, Array);
+
+                expect(time_tracking_histories[0]).to.have.property('time_tracking_history_id');
+                expect(time_tracking_histories[0]).to.have.property('time_tracking_id');
+                expect(time_tracking_histories[0]).to.have.property('issue_id');
+                expect(time_tracking_histories[0]).to.have.property('person_id');
+                expect(time_tracking_histories[0]).to.have.property('time_tracking_history_action');
+                expect(time_tracking_histories[0]).to.have.property('new_content');
+                expect(time_tracking_histories[0]).to.have.property('old_content');
+                expect(time_tracking_histories[0]).to.have.property('updated_content_type');
+                expect(time_tracking_histories[0]).to.have.property('created_date');
                 done();
             });
     });
+
 })

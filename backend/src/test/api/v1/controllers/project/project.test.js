@@ -17,7 +17,6 @@ describe('tests /project endpoint', () => {
         await exec('npm run db:person:up');
         await exec('npm run db:project:up');
         await exec('npm run db:proj_parti:up');
-        await exec('npm run db:sprint:up');
 
         chai.request('localhost:3000')
             .post('/api/v1/users/signup')
@@ -334,23 +333,6 @@ describe('tests /project endpoint', () => {
             .end((err, res) => {
                 assert.equal(res.body.status, 200);
                 assert.isFalse(res.body.data.deleted);
-                done();
-            });
-    });
-
-    it('GET/sprints/:id project successfully', (done) => {
-        chai.request('localhost:3000')
-            .get('/api/v1/projects/sprints/1')
-            .set('Authorization', `Bearer ${accessToken}`)
-            .end((err, res) => {
-                const data = res.body.data;
-                assert.equal(res.body.status, 200);
-                assert.isNotEmpty(res.body.data);
-                assert.equal(data.total_count, 0);
-                assert.isFalse(data.has_more);
-                const sprints = data.sprints;
-                assert.instanceOf(sprints, Array);
-                //should really create a sprint, assign that sprint to a project then test this. but im too lazy for that shit
                 done();
             });
     });

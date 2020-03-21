@@ -94,13 +94,34 @@ TimeTrackingRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-TimeTrackingRouter.get('/:issueId', authenticate_jwtStrategy, async (req, res) => {
+TimeTrackingRouter.get('/issues/:issueId', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
     try {
         const {issueId} = req.params;
         await client.query('begin');
         const getTimeTracking_Q_values = [issueId];
         const getTimeTracking_Q = `select * from time_tracking where issue_id=$1`;
+        const getTimeTracking_R = await client.query(getTimeTracking_Q, getTimeTracking_Q_values);
+
+        await client.query('commit');
+        ResponseUtil.setResponse(200, ResponseFlag.OK, getTimeTracking_R.rows[0]);
+        ResponseUtil.responds(res);
+    } catch (e) {
+        await client.query('rollback');
+        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
+        ResponseUtil.responds(res);
+    } finally {
+        await client.release();
+    }
+});
+
+TimeTrackingRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
+    const client = await db.client();
+    try {
+        const {id} = req.params;
+        await client.query('begin');
+        const getTimeTracking_Q_values = [id];
+        const getTimeTracking_Q = `select * from time_tracking where time_tracking_id=$1`;
         const getTimeTracking_R = await client.query(getTimeTracking_Q, getTimeTracking_Q_values);
 
         await client.query('commit');
@@ -190,7 +211,6 @@ TimeTrackingRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
         const updateTimeTracking_R = await client.query(updateTimeTracking_Q, updateTimeTracking_Q_values);
         await client.query('commit');
         ResponseUtil.setResponse(200, ResponseFlag.OK, updateTimeTracking_R.rows[0]);
-        // ResponseUtil.setResponse(200, ResponseFlag.OK, 'ok');
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');

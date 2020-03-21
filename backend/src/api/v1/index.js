@@ -10,6 +10,7 @@ import SprintRouter from "./controllers/sprint";
 import CommentRouter from "./controllers/comment";
 import CommentHistoryRouter from "./controllers/comment_history";
 import TimeTrackingRouter from "./controllers/time_tracking";
+import TimeTrackingHistoryRouter from "./controllers/time_tracking_history";
 
 APIRouter.use('/users', AuthUserRouter);
 APIRouter.use('/persons', PersonRouter);
@@ -20,5 +21,6 @@ APIRouter.use('/sprints', SprintRouter);
 APIRouter.use('/comments', CommentRouter);
 APIRouter.use('/comment_histories', CommentHistoryRouter);
 APIRouter.use('/time_tracking', TimeTrackingRouter);
+APIRouter.use('/time_tracking_histories', TimeTrackingHistoryRouter);
 
 export default APIRouter;

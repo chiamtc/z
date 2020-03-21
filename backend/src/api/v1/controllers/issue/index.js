@@ -88,6 +88,7 @@ IssueRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
+//my issues
 IssueRouter.get('/', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
     const paginator = new Paginator(req.query.limit, req.query.offset);
@@ -353,6 +354,8 @@ IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, async (req, res) =
 });
 
 //TODO: get all where task = req.params ?
+
+//TODO get all issues belongs to this project
 
 export default IssueRouter;
 /*

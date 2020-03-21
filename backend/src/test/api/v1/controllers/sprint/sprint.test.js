@@ -389,4 +389,21 @@ describe('tests /sprints endpoint', () => {
                     });
             });
     });
+
+    it('GET/sprints/:id project successfully', (done) => {
+        chai.request('localhost:3000')
+            .get('/api/v1/sprints/projects/1')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .end((err, res) => {
+                const data = res.body.data;
+                assert.equal(res.body.status, 200);
+                assert.isNotEmpty(res.body.data);
+                assert.equal(data.total_count, 0);
+                assert.isFalse(data.has_more);
+                const sprints = data.sprints;
+                assert.instanceOf(sprints, Array);
+                //should really create a sprint, assign that sprint to a project then test this. but im too lazy for that shit
+                done();
+            });
+    });
 });

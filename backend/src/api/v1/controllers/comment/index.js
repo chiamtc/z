@@ -115,7 +115,7 @@ CommentRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-CommentRouter.get('/:issueId', authenticate_jwtStrategy, async (req, res) => {
+CommentRouter.get('/issues/:issueId', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
     const paginator = new Paginator(req.query.limit, req.query.offset);
     try {
@@ -123,6 +123,7 @@ CommentRouter.get('/:issueId', authenticate_jwtStrategy, async (req, res) => {
         await client.query('begin');
         //get issue comment
         const getIssueComment_Q_values = [issueId, paginator.limit, paginator.offset];
+        //TODO: need a regression with join statement to get fn + ln
         const getIssueComment_Q = `select * from comment where issue_id=$1 limit $2 offset $3`;
         const getIssueComment_R = await client.query(getIssueComment_Q, getIssueComment_Q_values);
 

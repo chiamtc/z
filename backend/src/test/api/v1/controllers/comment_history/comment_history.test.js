@@ -175,9 +175,9 @@ describe('tests /comment_histories endpoint', () => {
             }); //end pre-requisite #1
     });
 
-    it('GET/ comment_histories successfully', (done) => {
+    it('GET/issues/:issueId comment_histories successfully', (done) => {
         chai.request('localhost:3000')
-            .get('/api/v1/comment_histories/1')
+            .get('/api/v1/comment_histories/issues/1')
             .set('Authorization', `Bearer ${accessToken}`)
             .end((err, res) => {
                 const data = res.body.data;

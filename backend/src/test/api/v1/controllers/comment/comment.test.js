@@ -156,6 +156,7 @@ describe('tests /comments endpoint', () => {
                 done();
             });
     });
+
     it('POST/ comments fails due to absence of jwt token', (done) => {
         chai.request('localhost:3000')
             .post('/api/v1/comments')
@@ -219,9 +220,9 @@ describe('tests /comments endpoint', () => {
             });
     });
 
-    it('GET/:id comments belong to an issue successfully', (done) => {
+    it('GET/issues/:issueId comments belong to an issue successfully', (done) => {
         chai.request('localhost:3000')
-            .get('/api/v1/comments/1')
+            .get('/api/v1/comments/issues/1')
             .set('Authorization', `Bearer ${accessToken}`)
             .end((err, res) => {
                 const data = res.body.data;

@@ -11,7 +11,7 @@ const CommentHistoryRouter = Router();
 
 const ResponseUtil = new HttpResponse();
 
-CommentHistoryRouter.get('/:issueId', authenticate_jwtStrategy, async (req, res) => {
+CommentHistoryRouter.get('/issues/:issueId', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
     const paginator = new Paginator(req.query.limit, req.query.offset);
     const {issueId} = req.params;

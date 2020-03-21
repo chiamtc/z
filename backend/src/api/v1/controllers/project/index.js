@@ -65,6 +65,7 @@ ProjectRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
+//my project
 ProjectRouter.get('/', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
     const paginator = new Paginator(req.query.limit, req.query.offset);
@@ -152,50 +153,6 @@ ProjectRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
         ResponseUtil.responds(res);
     }catch(e){
         await client.query('rollback');
-        ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
-        ResponseUtil.responds(res);
-    } finally {
-        await client.release();
-    }
-});
-
-ProjectRouter.get('/sprints/:id', authenticate_jwtStrategy, async (req, res) => {
-    let queryLimit = 5, queryOffset = 0;
-    const client = await db.client();
-    try {
-        if (req.query.hasOwnProperty('limit')) {
-            const {limit} = req.query;
-            queryLimit = parseInt(limit);
-            if (queryLimit <= 0) {
-                ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: query limit must be more than equal 1`);
-                ResponseUtil.responds(res);
-            }
-        }
-        if (req.query.hasOwnProperty('offset')) {
-            const {offset} = req.query;
-            queryOffset = parseInt(offset);
-        }
-    } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
-        ResponseUtil.responds(res);
-    }
-
-    try {
-        const {id} = req.params;
-        await client.query('begin');
-        let getProjectSprint_Q_values = [id, queryLimit, queryOffset];
-        const getProjectsSprint_Q = `select * from sprint where project_id=$1 limit $2 offset $3`;
-        const getProjectsSprint_R = await client.query(getProjectsSprint_Q, getProjectSprint_Q_values);
-        const getCount_Q = `select COUNT(*) from sprint where project_id=$1`;
-        const getCount_R = await client.query(getCount_Q, [getProjectSprint_Q_values[0]]);
-
-        const total_count = parseInt(getCount_R.rows[0].count);
-        const has_more = queryLimit * (queryOffset + 1) < total_count;
-        await client.query('commit');
-
-        ResponseUtil.setResponse(200, ResponseFlag.OK, {sprints: getProjectsSprint_R.rows, total_count, has_more});
-        ResponseUtil.responds(res);
-    } catch (e) {
         ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     } finally {

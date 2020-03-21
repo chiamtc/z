@@ -188,7 +188,30 @@ describe('tests /time_tracking endpoint', () => {
             });
     });
 
-    it('GET/ time tracking successfully', (done) => {
+    it('GET/issues/:issueId time tracking successfully', (done) => {
+        chai.request('localhost:3000')
+            .get('/api/v1/time_tracking/issues/1')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .end((err, res) => {
+                const body = res.body.data;
+                assert.equal(res.body.status, 200);
+                assert.isNotEmpty(res.body.data);
+                assert.equal(body.original_estimation, 1000);
+                assert.equal(body.time_spent, 300);
+                assert.equal(body.remaining_estimation, 1000);
+                expect(body).to.have.property('time_tracking_id');
+                expect(body).to.have.property('issue_id');
+                expect(body).to.have.property('original_estimation');
+                expect(body).to.have.property('remaining_estimation');
+                expect(body).to.have.property('time_spent');
+                expect(body).to.have.property('start_date');
+                expect(body).to.have.property('created_date');
+                expect(body).to.have.property('updated_date');
+                done();
+            });
+    });
+
+    it('GET/:id time tracking successfully', (done) => {
         chai.request('localhost:3000')
             .get('/api/v1/time_tracking/1')
             .set('Authorization', `Bearer ${accessToken}`)

@@ -29,7 +29,8 @@
     "test:sprint": "jest src/test/api/v1/controllers/sprint/sprint.test.js --config jest.config.json",
     "test:comment": "jest src/test/api/v1/controllers/comment/comment.test.js --config jest.config.json",
     "test:comment_history": "jest src/test/api/v1/controllers/comment_history/comment_history.test.js --config jest.config.json",
-    "test:time_tracking": "jest src/test/api/v1/controllers/time_tracking/time_tracking.test.js --config jest.config.json"
+    "test:time_tracking": "jest src/test/api/v1/controllers/time_tracking/time_tracking.test.js --config jest.config.json",
+    "test:time_tracking_history": "jest src/test/api/v1/controllers/time_tracking_history/time_tracking_history.test.js --config jest.config.json"
   },
   "dependencies": {
     "@babel/cli": "^7.7.4",
