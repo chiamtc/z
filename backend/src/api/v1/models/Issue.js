@@ -86,4 +86,73 @@ export default class Issue {
         req.client = client;
         next();
     }
+
+    sanitize_post_assignee_middleware(req,res,next){
+        const sanitizer = new Sanitizer();
+        const ResponseUtil = new HttpResponse();
+
+        const createAssignee_ref = new Map();
+        createAssignee_ref.set('assignee', 'd');
+
+        try {
+            sanitizer.sanitize_reference = createAssignee_ref;
+            sanitizer.sanitize_request(req.body);
+            req.post_ops = {...sanitizer.build_query('post')};
+            next();
+        } catch (e) {
+            ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
+            ResponseUtil.responds(res);
+        }
+    }
+
+    async log_post_assignee_middleware(req,res){
+        const SanitizerUtil = new Sanitizer();
+        const {client} = req;
+        const {id}  = req.params;
+        //create history
+        try {
+            const createHistory_Q_values = [req.user.person_id, id, QueryConstant.ISSUE_HISTORY_ACTION_UPDATED, null, req.post_ops.query_val[0], 'assignee'];
+            const createHistory_Q = `insert into issue_history(person_id, issue_id, issue_history_action, old_content, new_content, updated_content_type) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
+            const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
+        }catch(e){
+            console.log(e);
+        }finally{
+            await client.release();
+        }
+    }
+
+    sanitize_delete_assignee_middleware(req,res,next){
+        const sanitizer = new Sanitizer();
+
+        const deleteAssignee_ref = new Map();
+        deleteAssignee_ref.set('assignee', 'd');
+
+        try {
+            sanitizer.sanitize_reference = deleteAssignee_ref;
+            sanitizer.sanitize_request(req.body);
+            req.delete_ops = {...sanitizer.build_query('post')};
+            next();
+        } catch (e) {
+            ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
+            ResponseUtil.responds(res);
+        }
+    }
+
+    async log_delete_assignee_middleware(req,res){
+        const SanitizerUtil = new Sanitizer();
+        const {client} = req;
+        const {id}  = req.params;
+        //create history
+        try {
+            //create history
+            const createHistory_Q_values = [req.user.person_id, id, QueryConstant.ISSUE_HISTORY_ACTION_REMOVED, null, req.delete_ops.query_val[0], 'assignee'];
+            console.log(createHistory_Q_values)
+            const createHistory_Q = `insert into issue_history(person_id, issue_id, issue_history_action, old_content, new_content, updated_content_type) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
+            const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
+        }catch(e){
+            console.log(e);
+        }finally{
+            await client.release();
+        }
+    }
 }

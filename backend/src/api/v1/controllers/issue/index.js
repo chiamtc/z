@@ -15,10 +15,6 @@ const ResponseUtil = new HttpResponse();
 const RequestUtil = new HttpRequest();
 const IssueModel = new Issue();
 
-const log_history_update_issue = async (req) => {
-
-}
-
 IssueRouter.post('/', authenticate_jwtStrategy, IssueModel.sanitize_post_middleware, async (req, res, next) => {
     const client = await db.client();
     const SanitizerUtil = new Sanitizer();
@@ -202,29 +198,14 @@ IssueRouter.put('/reporter/:id', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-IssueRouter.post('/assignee/:id', authenticate_jwtStrategy, async (req, res) => {
-    let f;
+IssueRouter.post('/assignee/:id', authenticate_jwtStrategy, IssueModel.sanitize_post_assignee_middleware, async (req, res, next) => {
     const {id} = req.params;
     const client = await db.client();
-    const SanitizerUtil = new Sanitizer();
 
-    const createAssignee_ref = new Map();
-    createAssignee_ref.set('assignee', 'd');
-    // updateMe_ref.set('sprint_id', 'd'); //TODO: uncomment when doing sprint
-
-    try {
-        SanitizerUtil.sanitize_reference = createAssignee_ref;
-        SanitizerUtil.sanitize_request(req.body);
-        f = SanitizerUtil.build_query('post');
-    } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
-        ResponseUtil.responds(res);
-    }
     try {
         await client.query('begin');
-
         //create issue_participant
-        const createParticipant_Issue_Q_values = [f.query_val[0], id, QueryConstant.PARTICIPANT_TYPE_ASSIGNEE];
+        const createParticipant_Issue_Q_values = [req.post_ops.query_val[0], id, QueryConstant.PARTICIPANT_TYPE_ASSIGNEE];
         const createParticipant_Issue_Q = `insert into participant_issue(participant_id, issue_id, participant_type) values($1,$2,$3) returning participant_id`;
         const createParticipant_Issue_R = await client.query(createParticipant_Issue_Q, createParticipant_Issue_Q_values);
 
@@ -232,75 +213,44 @@ IssueRouter.post('/assignee/:id', authenticate_jwtStrategy, async (req, res) => 
         const getParticipant_Q = `select * from person where person_id=$1`;
         const getParticipant_R = await client.query(getParticipant_Q, getParticipant_Q_values);
 
-        //create history
-        const createHistory_Q_values = [req.user.person_id, id, QueryConstant.ISSUE_HISTORY_ACTION_UPDATED, null, f.query_val[0], 'assignee'];
-        const createHistory_Q = `insert into issue_history(person_id, issue_id, issue_history_action, old_content, new_content, updated_content_type) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
-        const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
         await client.query('commit');
         ResponseUtil.setResponse(200, ResponseFlag.OK, getParticipant_R.rows.length === 0 ? {} : getParticipant_R.rows[0]);
+        RequestUtil.append_request(req, {client, rows: createParticipant_Issue_R.rows});
         ResponseUtil.responds(res);
-
+        next();
     } catch (e) {
         await client.query('rollback');
         ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
-    } finally {
-        await client.release();
     }
-});
+}, IssueModel.log_post_assignee_middleware);
 
-IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, async (req, res) => {
-    let f;
+IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, IssueModel.sanitize_delete_assignee_middleware, async (req, res, next) => {
     const {id} = req.params;
     const client = await db.client();
-    const SanitizerUtil = new Sanitizer();
-
-    const createAssignee_ref = new Map();
-    createAssignee_ref.set('assignee', 'd');
-    // updateMe_ref.set('sprint_id', 'd'); //TODO: uncomment when doing sprint
-
-    try {
-        SanitizerUtil.sanitize_reference = createAssignee_ref;
-        SanitizerUtil.sanitize_request(req.body);
-        f = SanitizerUtil.build_query('post');
-    } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
-        ResponseUtil.responds(res);
-    }
     try {
         await client.query('begin');
-
         //create issue_participant
-        const createParticipant_Issue_Q_values = [f.query_val[0], id, QueryConstant.PARTICIPANT_TYPE_ASSIGNEE];
+        const createParticipant_Issue_Q_values = [req.delete_ops.query_val[0], parseInt(id), QueryConstant.PARTICIPANT_TYPE_ASSIGNEE];
         const createParticipant_Issue_Q = `delete from participant_issue where participant_id=$1 and issue_id=$2 and participant_type=$3 returning *`;
         const createParticipant_Issue_R = await client.query(createParticipant_Issue_Q, createParticipant_Issue_Q_values);
 
-        //get deleted participant
-        const getParticipant_Q_values = [createParticipant_Issue_R.rows[0].participant_id];
-        const getParticipant_Q = `select * from person where person_id=$1`;
-        const getParticipant_R = await client.query(getParticipant_Q, getParticipant_Q_values);
-
-        //create history
-        const createHistory_Q_values = [req.user.person_id, id, QueryConstant.ISSUE_HISTORY_ACTION_REMOVED, null, f.query_val[0], 'assignee'];
-        const createHistory_Q = `insert into issue_history(person_id, issue_id, issue_history_action, old_content, new_content, updated_content_type) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
-        const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
-
         await client.query('commit');
         if (createParticipant_Issue_R.rows.length !== 0) {
-            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true, assignee: getParticipant_R.rows[0]});
+            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true,assignee: createParticipant_Issue_R.rows[0]});
         } else {
             ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: false});
         }
 
+        RequestUtil.append_request(req, {client});
         ResponseUtil.responds(res);
+        next()
     } catch (e) {
         await client.query('rollback');
         ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
-    } finally {
-        await client.release();
     }
-});
+}, IssueModel.log_delete_assignee_middleware);
 
 //TODO: get all where task = req.params ?
 
