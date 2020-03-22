@@ -6,93 +6,34 @@ import db from "../../../../db";
 import Sanitizer from "../../../../utils/Sanitizer";
 import QueryConstant from "../../../../constants/query";
 import TimeTracking from "../../models/TimeTracking";
-import TimeTrackingHistory from "../../models/TimeTrackingHistory";
+import HttpRequest from "../../../../utils/HttpRequest";
 
 const TimeTrackingRouter = Router();
 
 const ResponseUtil = new HttpResponse();
+const RequestUtil = new HttpRequest();
+const TimeTrackingModel = new TimeTracking();
 
-TimeTrackingRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
-    let f;
+TimeTrackingRouter.post('/', authenticate_jwtStrategy, TimeTrackingModel.sanitize_post_middleware, async (req, res, next) => {
     const client = await db.client();
-    const tth = new TimeTrackingHistory();
     const SanitizerUtil = new Sanitizer();
-    const createTimeTracking_ref = new Map();
-    createTimeTracking_ref.set('original_estimation', 'd');
-    createTimeTracking_ref.set('remaining_estimation', 'd');
-    createTimeTracking_ref.set('time_spent', 'd');
-    createTimeTracking_ref.set('start_date', 's');
-    createTimeTracking_ref.set('issue_id', 'd');
-    try {
-        SanitizerUtil.sanitize_reference = createTimeTracking_ref;
-        SanitizerUtil.sanitize_request(req.body);
-        f = SanitizerUtil.build_query('post');
-    } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
-        ResponseUtil.responds(res);
-    }
     try {
         await client.query('begin');
-
-        //create time tracking
-        if (f.query_string.includes('original_estimation') && !f.query_string.includes('remaining_estimation')) {
-            f.query_string = f.query_string.concat(',remaining_estimation');
-            f.query_val.push(f.query_val[f.query_string.split(',').map(e => e.trim()).indexOf('original_estimation')])
-        }
-        const createTimeTracking_Q = `insert into time_tracking (${f.query_string}) values (${SanitizerUtil.build_values(f.query_val)}) returning *`;
-        const createTimeTracking_R = await client.query(createTimeTracking_Q, f.query_val);
-
-        //todo; create time_tracking_history
-        const arr = f.query_string.split(',').map(e => e.trim());
-
-        arr.map(async (str, i) => {
-            if (str !== 'issue_id') {
-                let createHistory_Q_values = [createTimeTracking_R.rows[0].issue_id, createTimeTracking_R.rows[0].time_tracking_id, parseInt(req.user.person_id)];
-                switch (str.trim()) {
-                    case 'time_spent':
-                        createHistory_Q_values.push(QueryConstant.TIME_TRACKING_HISTORY_ACTION_LOGGED, f.query_val[i], 0, str);
-                        const createLogHistory_Q = `insert into time_tracking_history(issue_id, time_tracking_id, person_id, time_tracking_history_action, new_content, old_content, updated_content_type) values($1, $2, $3, $4, $5, $6, $7);`
-                        const createLogHistory_R = await client.query(createLogHistory_Q, createHistory_Q_values);
-
-                        createHistory_Q_values.pop();
-                        createHistory_Q_values.pop();
-                        createHistory_Q_values.pop();
-                        createHistory_Q_values.pop();
-                        createHistory_Q_values.push(QueryConstant.TIME_TRACKING_HISTORY_ACTION_UPDATED, f.query_val[i], 0, str);
-                        const createSpentTimeHistory_Q = `insert into time_tracking_history(issue_id, time_tracking_id, person_id, time_tracking_history_action, new_content, old_content, updated_content_type) values($1, $2, $3, $4, $5, $6, $7);`
-                        const createSpentTimeHistory_R = await client.query(createSpentTimeHistory_Q, createHistory_Q_values);
-                        if (!arr.includes('remaining_estimation')) {
-                            createHistory_Q_values.pop();
-                            createHistory_Q_values.pop();
-                            createHistory_Q_values.pop();
-                            createHistory_Q_values.pop();
-                            createHistory_Q_values.push(QueryConstant.TIME_TRACKING_HISTORY_ACTION_UPDATED, 0, 0, 'remaining_estimation');
-                            const createReEstHistory_Q = `insert into time_tracking_history(issue_id, time_tracking_id, person_id, time_tracking_history_action, new_content, old_content, updated_content_type) values($1, $2, $3, $4, $5, $6, $7);`
-                            const createReEstHistory_R = await client.query(createReEstHistory_Q, createHistory_Q_values);
-                        }
-                        break;
-                    default:
-                        createHistory_Q_values.push(QueryConstant.TIME_TRACKING_HISTORY_ACTION_UPDATED, f.query_val[i], 0, str);
-                        const createHistory_Q = `insert into time_tracking_history(issue_id, time_tracking_id, person_id, time_tracking_history_action, new_content, old_content, updated_content_type) values($1, $2, $3, $4, $5, $6, $7);`
-                        const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
-                        break;
-                }
-            }
-        });
-
+        const createTimeTracking_Q = `insert into time_tracking (${req.post_ops.query_string}) values (${SanitizerUtil.build_values(req.post_ops.query_val)}) returning *`;
+        const createTimeTracking_R = await client.query(createTimeTracking_Q, req.post_ops.query_val);
 
         await client.query('commit');
-        // ResponseUtil.setResponse(201, ResponseFlag.OK, 'ok');
+        RequestUtil.append_request(req, {client, rows: createTimeTracking_R.rows});
         ResponseUtil.setResponse(201, ResponseFlag.OK, createTimeTracking_R.rows[0]);
         ResponseUtil.responds(res);
+        next();
     } catch (e) {
         await client.query('rollback');
         ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
-    } finally {
-        await client.release();
     }
-});
+}, TimeTrackingModel.log_post_middleware);
+
 
 TimeTrackingRouter.get('/issues/:issueId', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();

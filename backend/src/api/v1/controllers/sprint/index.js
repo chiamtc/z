@@ -6,42 +6,24 @@ import db from "../../../../db";
 import Sanitizer from "../../../../utils/Sanitizer";
 import Paginator from "../../../../utils/Paginator";
 import QueryConstant from "../../../../constants/query";
+import Sprint from "../../models/Sprint";
 
 const SprintRouter = Router();
 const ResponseUtil = new HttpResponse();
-
-SprintRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
-    let f;
+const SprintModel = new Sprint();
+SprintRouter.post('/', authenticate_jwtStrategy, SprintModel.sanitize_post_sanitizer, async (req, res) => {
     const client = await db.client();
     const SanitizerUtil = new Sanitizer();
 
-    const createSprint_ref = new Map();
-    createSprint_ref.set('sprint_name', 's');
-    createSprint_ref.set('sprint_goal', 's');
-    createSprint_ref.set('start_date', 's');
-    createSprint_ref.set('end_date', 's');
-    createSprint_ref.set('project_id', 'd');
-
-    try {
-        SanitizerUtil.sanitize_reference = createSprint_ref;
-        SanitizerUtil.sanitize_request(req.body);
-        f = SanitizerUtil.build_query('post');
-    } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
-        ResponseUtil.responds(res);
-    }
-
     try {
         await client.query('begin');
-
         //create sprint
-        const createSprint_Q = `insert into sprint(${f.query_string}) values (${SanitizerUtil.build_values(f.query_val)}) returning *`;
-        const createSprint_R = await client.query(createSprint_Q, f.query_val);
+        const createSprint_Q = `insert into sprint(${req.post_ops.query_string}) values (${SanitizerUtil.build_values(req.post_ops.query_val)}) returning *`;
+        const createSprint_R = await client.query(createSprint_Q, req.post_ops.query_val);
 
         await client.query('commit');
         ResponseUtil.setResponse(201, ResponseFlag.OK, createSprint_R.rows[0]);
         ResponseUtil.responds(res);
-
     } catch (e) {
         await client.query('rollback');
         ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
@@ -74,34 +56,16 @@ SprintRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-SprintRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
-    let f;
+SprintRouter.put('/:id', authenticate_jwtStrategy, SprintModel.sanitize_put_sanitizer, async (req, res) => {
     const client = await db.client();
-    const SanitizerUtil = new Sanitizer();
-
-    const updateSprint_ref = new Map();
-    updateSprint_ref.set('sprint_name', 's');
-    updateSprint_ref.set('sprint_goal', 's');
-    updateSprint_ref.set('start_date', 's');
-    updateSprint_ref.set('end_date', 's');
-
-    try {
-        SanitizerUtil.sanitize_reference = updateSprint_ref;
-        SanitizerUtil.sanitize_request(req.body);
-        f = SanitizerUtil.build_query('put');
-    } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
-        ResponseUtil.responds(res);
-    }
-
     try {
         const {id} = req.params;
         await client.query('begin');
-        const updateSprint_Q_values = [...f.query_val, id]
-        const updateSprint_Q = `update sprint set ${f.query_string} where sprint_id=$${updateSprint_Q_values.length} returning *`;
+        const updateSprint_Q_values = [...req.put_ops.query_val, id]
+        const updateSprint_Q = `update sprint set ${req.put_ops.query_string} where sprint_id=$${updateSprint_Q_values.length} returning *`;
         const updateSprint_R = await client.query(updateSprint_Q, updateSprint_Q_values);
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, updateSprint_R.rows.length ===0 ? {} : updateSprint_R.rows[0]);
+        ResponseUtil.setResponse(200, ResponseFlag.OK, updateSprint_R.rows.length === 0 ? {} : updateSprint_R.rows[0]);
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
@@ -125,10 +89,12 @@ SprintRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
         const deleteSprint_R = await client.query(deleteSprint_Q, query_values);
 
         if (deleteSprint_R.rows.length !== 0) {
-            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true, sprint:deleteSprint_R.rows[0] ,issues: releaseIssue_R.rows});
-        } else {
-            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted:false});
-        }
+            ResponseUtil.setResponse(200, ResponseFlag.OK, {
+                deleted: true,
+                sprint: deleteSprint_R.rows[0],
+                issues: releaseIssue_R.rows
+            });
+        } else ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: false});
 
         await client.query('commit');
         ResponseUtil.responds(res);
@@ -139,42 +105,24 @@ SprintRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
     } finally {
         await client.release();
     }
-    //update issue set sprint_id = null where sprint_id=$1 returning *;
 });
 
-//TODO use paginator class
 SprintRouter.get('/projects/:projectId', authenticate_jwtStrategy, async (req, res) => {
-    let queryLimit = 5, queryOffset = 0;
     const client = await db.client();
-    try {
-        if (req.query.hasOwnProperty('limit')) {
-            const {limit} = req.query;
-            queryLimit = parseInt(limit);
-            if (queryLimit <= 0) {
-                ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: query limit must be more than equal 1`);
-                ResponseUtil.responds(res);
-            }
-        }
-        if (req.query.hasOwnProperty('offset')) {
-            const {offset} = req.query;
-            queryOffset = parseInt(offset);
-        }
-    } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
-        ResponseUtil.responds(res);
-    }
+    const paginator = new Paginator(req.query.limit, req.query.offset);
 
     try {
         const {projectId} = req.params;
         await client.query('begin');
-        let getProjectSprint_Q_values = [projectId, queryLimit, queryOffset];
+        let getProjectSprint_Q_values = [projectId, paginator.limit, paginator.offset];
         const getProjectsSprint_Q = `select * from sprint where project_id=$1 limit $2 offset $3`;
         const getProjectsSprint_R = await client.query(getProjectsSprint_Q, getProjectSprint_Q_values);
+
         const getCount_Q = `select COUNT(*) from sprint where project_id=$1`;
         const getCount_R = await client.query(getCount_Q, [getProjectSprint_Q_values[0]]);
 
         const total_count = parseInt(getCount_R.rows[0].count);
-        const has_more = queryLimit * (queryOffset + 1) < total_count;
+        const has_more = paginator.get_hasMore(total_count);
         await client.query('commit');
 
         ResponseUtil.setResponse(200, ResponseFlag.OK, {sprints: getProjectsSprint_R.rows, total_count, has_more});
