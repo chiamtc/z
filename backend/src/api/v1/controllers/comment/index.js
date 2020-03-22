@@ -4,37 +4,23 @@ import HttpResponse from "../../../../utils/HttpResponse";
 import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
 import Sanitizer from "../../../../utils/Sanitizer";
-import QueryConstant from "../../../../constants/query";
 import Paginator from "../../../../utils/Paginator";
+import Comment from '../../models/Comment'
+import HttpRequest from "../../../../utils/HttpRequest";
 
 const CommentRouter = Router();
-
+const CommentModel = new Comment();
 const ResponseUtil = new HttpResponse();
+const RequestUtil = new HttpRequest();
 
-CommentRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
-    let f;
+CommentRouter.post('/', authenticate_jwtStrategy, CommentModel.sanitize_post_middleware, async (req, res) => {
     const client = await db.client();
     const SanitizerUtil = new Sanitizer();
-
-    const createComment_ref = new Map();
-    createComment_ref.set('content', 's');
-    createComment_ref.set('person_id', 'd');
-    createComment_ref.set('issue_id', 'd');
-
-    try {
-        SanitizerUtil.sanitize_reference = createComment_ref;
-        SanitizerUtil.sanitize_request(req.body);
-        f = SanitizerUtil.build_query('post');
-    } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
-        ResponseUtil.responds(res);
-    }
-
     try {
         await client.query('begin');
         //create comment
-        const createComment_Q = `insert into comment (${f.query_string}) values (${SanitizerUtil.build_values(f.query_val)}) returning *`;
-        const createComment_R = await client.query(createComment_Q, f.query_val);
+        const createComment_Q = `insert into comment (${req.post_ops.query_string}) values (${SanitizerUtil.build_values(req.post_ops.query_val)}) returning *`;
+        const createComment_R = await client.query(createComment_Q, req.post_ops.query_val);
         await client.query('commit');
         ResponseUtil.setResponse(201, ResponseFlag.OK, createComment_R.rows[0]);
         ResponseUtil.responds(res);
@@ -47,29 +33,15 @@ CommentRouter.post('/', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-CommentRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
-    let f;
+CommentRouter.put('/:id', authenticate_jwtStrategy, CommentModel.sanitize_put_middleware, async (req, res) => {
     const client = await db.client();
-    const SanitizerUtil = new Sanitizer();
-
-    const createComment_ref = new Map();
-    createComment_ref.set('content', 's');
-
-    try {
-        SanitizerUtil.sanitize_reference = createComment_ref;
-        SanitizerUtil.sanitize_request(req.body);
-        f = SanitizerUtil.build_query('put');
-    } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
-        ResponseUtil.responds(res);
-    }
     try {
         const {id} = req.params;
         await client.query('begin');
 
         //update comment
-        const updateComment_Q_values = [...f.query_val, true, id];
-        const updateComment_Q = `update comment set ${f.query_string}, edited=$2 where comment_id=$3 returning *`;
+        const updateComment_Q_values = [...req.put_ops.query_val, true, id];
+        const updateComment_Q = `update comment set ${req.put_ops.query_string}, edited=$2 where comment_id=$3 returning *`;
         const updateComment_R = await client.query(updateComment_Q, updateComment_Q_values);
 
         await client.query('commit');
@@ -84,36 +56,30 @@ CommentRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-CommentRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
+CommentRouter.delete('/:id', authenticate_jwtStrategy, async (req, res, next) => {
     const client = await db.client();
-    const SanitizerUtil = new Sanitizer();
     try {
         const {id} = req.params;
-        const {person_id} = req.user;
         await client.query('begin');
 
         //delete comment
         const deleteComment_Q_values = [id];
         const deleteComment_Q = `delete from comment where comment_id=$1 returning *`;
         const deleteComment_R = await client.query(deleteComment_Q, deleteComment_Q_values);
+        await client.query('commit');
 
         if (deleteComment_R.rows.length !== 0) {
-            const createHistory_Q_values = [id, deleteComment_R.rows[0].issue_id, person_id, QueryConstant.COMMENT_HISTORY_ACTION_DELETED];
-            const createHistory_Q = `insert into comment_history(comment_id, issue_id, person_id, comment_history_action) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
-            const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
-
-            await client.query('commit');
             ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true, comment: deleteComment_R.rows[0]});
         } else ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: false});
+        RequestUtil.append_request(req, {client, rows: deleteComment_R.rows});
         ResponseUtil.responds(res);
+        next();
     } catch (e) {
         await client.query('rollback');
         ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
-    } finally {
-        await client.release();
     }
-});
+}, CommentModel.log_delete_middleware);
 
 CommentRouter.get('/issues/:issueId', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
