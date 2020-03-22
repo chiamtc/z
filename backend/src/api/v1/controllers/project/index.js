@@ -21,35 +21,28 @@ ProjectRouter.post('/', authenticate_jwtStrategy, async (req, res, next) => {
         //create project
         const createProject_Q_values = [body.project_name, body.project_desc, body.project_type, req.user.person_id];
         const createProject_Q = `insert into project(project_name, project_desc, project_type, project_lead) values(${SanitizerUtil.build_values(createProject_Q_values)}) returning *`;
-        // const createProject_R = await client.query(createProject_Q, createProject_Q_values);
+        const createProject_R = await client.query(createProject_Q, createProject_Q_values);
 
         //create project_participant
-        // const updateProjParti_Q_values = [parseInt(createProject_R.rows[0].project_id), parseInt(req.user.person_id)];
-        // const updateProjParti_Q = `insert into project_participant(project_id, participant_id) values(${SanitizerUtil.build_values(updateProjParti_Q_values)})`;
-        // const updateProjParti_R = await client.query(updateProjParti_Q, updateProjParti_Q_values);
-        /*const response = {
+        const updateProjParti_Q_values = [parseInt(createProject_R.rows[0].project_id), parseInt(req.user.person_id)];
+        const updateProjParti_Q = `insert into project_participant(project_id, participant_id) values(${SanitizerUtil.build_values(updateProjParti_Q_values)})`;
+        const updateProjParti_R = await client.query(updateProjParti_Q, updateProjParti_Q_values);
+        const response = {
             ...createProject_R.rows[0],
             first_name: req.user.first_name,
             last_name: req.user.last_name
-        };*/
-        // await client.query('commit');
-        // ResponseUtil.setResponse(201, ResponseFlag.OK, response);
-        // ResponseUtil.responds(res);
-        req.db_client = client;
-        req.project_values = createProject_Q_values;
-
-        ResponseUtil.setResponse(201, ResponseFlag.OK, 'ok?');
+        };
+        await client.query('commit');
+        ResponseUtil.setResponse(201, ResponseFlag.OK, response);
         ResponseUtil.responds(res);
-        next()
-
     } catch (e) {
         await client.query('rollback');
         ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE}. Error: ${e}`);
         ResponseUtil.responds(res);
-    } finally {
+    } finally{
         await client.release();
     }
-}, logger);
+});
 
 ProjectRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
@@ -67,8 +60,6 @@ ProjectRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
     } catch (e) {
         ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
-    } finally {
-        await client.release();
     }
 });
 
@@ -167,12 +158,5 @@ ProjectRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-async function logger(req, res, next) {
-    const client = req.db_client;
-    const q = await client.query('select * from project where project_id=1');
-    console.log(q.rows);
-    console.log('done')
-    next();
-}
 
 export default ProjectRouter;

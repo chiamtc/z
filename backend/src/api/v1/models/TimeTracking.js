@@ -1,4 +1,4 @@
-import {ErrorHandler} from "./ErrorHandler";
+import {ErrorHandler} from "../../../utils/ErrorHandler";
 
 export default class TimeTracking {
     constructor() {

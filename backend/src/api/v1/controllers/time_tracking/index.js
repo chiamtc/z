@@ -5,8 +5,8 @@ import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
 import Sanitizer from "../../../../utils/Sanitizer";
 import QueryConstant from "../../../../constants/query";
-import TimeTracking from "../../../../utils/TimeTracking";
-import TimeTrackingHistory from "../../../../utils/TimeTrackingHistory";
+import TimeTracking from "../../models/TimeTracking";
+import TimeTrackingHistory from "../../models/TimeTrackingHistory";
 
 const TimeTrackingRouter = Router();
 

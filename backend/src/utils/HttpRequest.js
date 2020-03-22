@@ -10,4 +10,8 @@ export default class HttpRequest {
         this.query = req.query;
         this.params = req.params;
     };
+
+    append_request(req, values) {
+        return Object.keys(values).map((e) => req[e] = values[e]);
+    }
 }
