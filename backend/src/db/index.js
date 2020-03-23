@@ -14,6 +14,6 @@ const query = (text, params) => pool.query(text, params);
 const db = {
     client:client,
     query:query
-}
+};
 
 export default db;

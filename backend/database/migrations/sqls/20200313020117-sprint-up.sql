@@ -1,3 +1,4 @@
+-- TODO: should have on delete cascade on project_id
 create table sprint(
     sprint_id serial primary key,
     sprint_name text not null,

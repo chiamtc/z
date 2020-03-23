@@ -1,17 +1,19 @@
 import {Router} from 'express';
 import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
+import HttpRequest from "../../../../utils/HttpRequest";
 import HttpResponse from "../../../../utils/HttpResponse";
 import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
 import Sanitizer from "../../../../utils/Sanitizer";
 import Paginator from "../../../../utils/Paginator";
 import Comment from '../../models/Comment'
-import HttpRequest from "../../../../utils/HttpRequest";
+import CommentMiddleware from '../../middlewares/comment';
 
 const CommentRouter = Router();
-const CommentModel = new Comment();
-const ResponseUtil = new HttpResponse();
 const RequestUtil = new HttpRequest();
+const ResponseUtil = new HttpResponse();
+const CommentModel = new Comment();
+const Comment_Middleware = new CommentMiddleware();
 
 CommentRouter.post('/', authenticate_jwtStrategy, CommentModel.sanitize_post_middleware, async (req, res) => {
     const client = await db.client();
@@ -79,7 +81,7 @@ CommentRouter.delete('/:id', authenticate_jwtStrategy, async (req, res, next) =>
         ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     }
-}, CommentModel.log_delete_middleware);
+}, Comment_Middleware.log_delete_middleware);
 
 CommentRouter.get('/issues/:issueId', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();

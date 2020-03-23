@@ -1,11 +1,9 @@
 import HttpResponse from "../../../utils/HttpResponse";
 import Sanitizer from "../../../utils/Sanitizer";
 import ResponseFlag from "../../../constants/response_flag";
-import QueryConstant from "../../../constants/query";
 
 export default class Comment {
     constructor() {
-
     }
 
     sanitize_post_middleware(req, res, next) {
@@ -40,22 +38,6 @@ export default class Comment {
         } catch (e) {
             ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
             ResponseUtil.responds(res);
-        }
-    }
-
-    async log_delete_middleware(req,res){
-        const SanitizerUtil = new Sanitizer();
-        const {rows, client} = req;
-        try {
-            if(rows.length !== 0) {
-                const createHistory_Q_values = [req.params.id, rows[0].issue_id, req.user.person_id, QueryConstant.COMMENT_HISTORY_ACTION_DELETED];
-                const createHistory_Q = `insert into comment_history(comment_id, issue_id, person_id, comment_history_action) values(${SanitizerUtil.build_values(createHistory_Q_values)})`;
-                const createHistory_R = await client.query(createHistory_Q, createHistory_Q_values);
-            }
-        } catch (e) {
-            console.log(e);
-        } finally {
-            await client.release();
         }
     }
 }

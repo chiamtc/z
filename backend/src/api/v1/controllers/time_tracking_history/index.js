@@ -3,10 +3,6 @@ import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
 import HttpResponse from "../../../../utils/HttpResponse";
 import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
-import Sanitizer from "../../../../utils/Sanitizer";
-import QueryConstant from "../../../../constants/query";
-import TimeTracking from "../../models/TimeTracking";
-import TimeTrackingHistory from "../../models/TimeTrackingHistory";
 import Paginator from "../../../../utils/Paginator";
 
 const TimeTrackingHistoryRouter = Router();

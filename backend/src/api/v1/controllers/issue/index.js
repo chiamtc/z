@@ -8,12 +8,13 @@ import QueryConstant from "../../../../constants/query";
 import Paginator from "../../../../utils/Paginator";
 import HttpRequest from "../../../../utils/HttpRequest";
 import Issue from "../../models/Issue";
+import IssueMiddleware from '../../middlewares/issue'
 
 const IssueRouter = Router();
-
 const ResponseUtil = new HttpResponse();
 const RequestUtil = new HttpRequest();
 const IssueModel = new Issue();
+const Issue_Middleware = new IssueMiddleware();
 
 IssueRouter.post('/', authenticate_jwtStrategy, IssueModel.sanitize_post_middleware, async (req, res, next) => {
     const client = await db.client();
@@ -41,7 +42,7 @@ IssueRouter.post('/', authenticate_jwtStrategy, IssueModel.sanitize_post_middlew
         ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     }
-}, IssueModel.log_post_middleware);
+}, Issue_Middleware.log_post_middleware);
 
 IssueRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
     const client = await db.client();
@@ -98,7 +99,7 @@ IssueRouter.get('/', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-IssueRouter.put('/:id', authenticate_jwtStrategy, IssueModel.sanitize_put_middleware, IssueModel.log_put_middleware, async (req, res) => {
+IssueRouter.put('/:id', authenticate_jwtStrategy, IssueModel.sanitize_put_middleware, Issue_Middleware.log_put_middleware, async (req, res) => {
     const {id} = req.params;
     const {client} = req;
     try {
@@ -174,7 +175,7 @@ IssueRouter.post('/assignee/:id', authenticate_jwtStrategy, IssueModel.sanitize_
         ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     }
-}, IssueModel.log_post_assignee_middleware);
+}, Issue_Middleware.log_post_assignee_middleware);
 
 IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, IssueModel.sanitize_delete_assignee_middleware, async (req, res, next) => {
     const {id} = req.params;
@@ -188,7 +189,10 @@ IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, IssueModel.sanitiz
 
         await client.query('commit');
         if (createParticipant_Issue_R.rows.length !== 0) {
-            ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: true,assignee: createParticipant_Issue_R.rows[0]});
+            ResponseUtil.setResponse(200, ResponseFlag.OK, {
+                deleted: true,
+                assignee: createParticipant_Issue_R.rows[0]
+            });
         } else {
             ResponseUtil.setResponse(200, ResponseFlag.OK, {deleted: false});
         }
@@ -201,7 +205,7 @@ IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, IssueModel.sanitiz
         ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
         ResponseUtil.responds(res);
     }
-}, IssueModel.log_delete_assignee_middleware);
+}, Issue_Middleware.log_delete_assignee_middleware);
 
 //TODO: get all where task = req.params ?
 

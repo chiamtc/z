@@ -5,7 +5,6 @@ import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
 import Sanitizer from "../../../../utils/Sanitizer";
 import Paginator from "../../../../utils/Paginator";
-import QueryConstant from "../../../../constants/query";
 import Sprint from "../../models/Sprint";
 
 const SprintRouter = Router();

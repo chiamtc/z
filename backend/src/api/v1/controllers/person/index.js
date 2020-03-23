@@ -1,5 +1,4 @@
 import {Router} from 'express';
-import passport from 'passport';
 import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
 import HttpResponse from "../../../../utils/HttpResponse";
 import ResponseFlag from "../../../../constants/response_flag";
