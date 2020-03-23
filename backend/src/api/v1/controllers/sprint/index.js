@@ -1,5 +1,4 @@
 import {Router} from 'express';
-import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
 import HttpResponse from "../../../../utils/HttpResponse";
 import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
@@ -10,7 +9,7 @@ import Sprint from "../../models/Sprint";
 const SprintRouter = Router();
 const ResponseUtil = new HttpResponse();
 const SprintModel = new Sprint();
-SprintRouter.post('/', authenticate_jwtStrategy, SprintModel.sanitize_post_sanitizer, async (req, res) => {
+SprintRouter.post('/', SprintModel.sanitize_post_sanitizer, async (req, res) => {
     const client = await db.client();
     const SanitizerUtil = new Sanitizer();
 
@@ -32,7 +31,7 @@ SprintRouter.post('/', authenticate_jwtStrategy, SprintModel.sanitize_post_sanit
     }
 });
 
-SprintRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
+SprintRouter.get('/:id', async (req, res) => {
     const client = await db.client();
     try {
         await client.query('begin');
@@ -55,7 +54,7 @@ SprintRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-SprintRouter.put('/:id', authenticate_jwtStrategy, SprintModel.sanitize_put_sanitizer, async (req, res) => {
+SprintRouter.put('/:id', SprintModel.sanitize_put_sanitizer, async (req, res) => {
     const client = await db.client();
     try {
         const {id} = req.params;
@@ -75,7 +74,7 @@ SprintRouter.put('/:id', authenticate_jwtStrategy, SprintModel.sanitize_put_sani
     }
 });
 
-SprintRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
+SprintRouter.delete('/:id', async (req, res) => {
     const client = await db.client();
     try {
         const {id} = req.params;
@@ -106,7 +105,7 @@ SprintRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-SprintRouter.get('/projects/:projectId', authenticate_jwtStrategy, async (req, res) => {
+SprintRouter.get('/projects/:projectId', async (req, res) => {
     const client = await db.client();
     const paginator = new Paginator(req.query.limit, req.query.offset);
 

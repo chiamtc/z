@@ -11,8 +11,12 @@ import CommentRouter from "./controllers/comment";
 import CommentHistoryRouter from "./controllers/comment_history";
 import TimeTrackingRouter from "./controllers/time_tracking";
 import TimeTrackingHistoryRouter from "./controllers/time_tracking_history";
+import {authenticate_jwtStrategy} from "../../auth/local_strategy_utils";
+
 
 APIRouter.use('/users', AuthUserRouter);
+
+APIRouter.use(authenticate_jwtStrategy);
 APIRouter.use('/persons', PersonRouter);
 APIRouter.use('/projects', ProjectRouter);
 APIRouter.use('/issues', IssueRouter);

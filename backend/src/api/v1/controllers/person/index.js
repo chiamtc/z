@@ -1,5 +1,4 @@
 import {Router} from 'express';
-import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
 import HttpResponse from "../../../../utils/HttpResponse";
 import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
@@ -9,7 +8,7 @@ const PersonRouter = Router();
 
 const ResponseUtil = new HttpResponse();
 
-PersonRouter.get('/me', authenticate_jwtStrategy, async (req, res) => {
+PersonRouter.get('/me', async (req, res) => {
     const client = await db.client();
     try {
         const getUser_Q_values = [req.user.auth_user_id]
@@ -36,7 +35,7 @@ PersonRouter.get('/me', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-PersonRouter.get('/:id', authenticate_jwtStrategy, async (req, res, next) => {
+PersonRouter.get('/:id', async (req, res, next) => {
     const client = await db.client();
     try {
         const {id} = req.params;
@@ -59,7 +58,7 @@ PersonRouter.get('/:id', authenticate_jwtStrategy, async (req, res, next) => {
     }
 });
 
-PersonRouter.put('/me', authenticate_jwtStrategy, async (req, res, next) => {
+PersonRouter.put('/me', async (req, res, next) => {
     let f;
     const client = await db.client();
     const SanitizerUtil = new Sanitizer();

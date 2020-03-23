@@ -1,5 +1,4 @@
 import {Router} from 'express';
-import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
 import HttpRequest from "../../../../utils/HttpRequest";
 import HttpResponse from "../../../../utils/HttpResponse";
 import ResponseFlag from "../../../../constants/response_flag";
@@ -15,7 +14,7 @@ const ResponseUtil = new HttpResponse();
 const CommentModel = new Comment();
 const Comment_Middleware = new CommentMiddleware();
 
-CommentRouter.post('/', authenticate_jwtStrategy, CommentModel.sanitize_post_middleware, async (req, res) => {
+CommentRouter.post('/', CommentModel.sanitize_post_middleware, async (req, res) => {
     const client = await db.client();
     const SanitizerUtil = new Sanitizer();
     try {
@@ -35,7 +34,7 @@ CommentRouter.post('/', authenticate_jwtStrategy, CommentModel.sanitize_post_mid
     }
 });
 
-CommentRouter.put('/:id', authenticate_jwtStrategy, CommentModel.sanitize_put_middleware, async (req, res) => {
+CommentRouter.put('/:id', CommentModel.sanitize_put_middleware, async (req, res) => {
     const client = await db.client();
     try {
         const {id} = req.params;
@@ -58,7 +57,7 @@ CommentRouter.put('/:id', authenticate_jwtStrategy, CommentModel.sanitize_put_mi
     }
 });
 
-CommentRouter.delete('/:id', authenticate_jwtStrategy, async (req, res, next) => {
+CommentRouter.delete('/:id', async (req, res, next) => {
     const client = await db.client();
     try {
         const {id} = req.params;
@@ -83,7 +82,7 @@ CommentRouter.delete('/:id', authenticate_jwtStrategy, async (req, res, next) =>
     }
 }, Comment_Middleware.log_delete_middleware);
 
-CommentRouter.get('/issues/:issueId', authenticate_jwtStrategy, async (req, res) => {
+CommentRouter.get('/issues/:issueId', async (req, res) => {
     const client = await db.client();
     const paginator = new Paginator(req.query.limit, req.query.offset);
     try {

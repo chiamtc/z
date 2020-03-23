@@ -1,5 +1,4 @@
 import {Router} from 'express';
-import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
 import HttpResponse from "../../../../utils/HttpResponse";
 import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
@@ -16,7 +15,7 @@ const RequestUtil = new HttpRequest();
 const IssueModel = new Issue();
 const Issue_Middleware = new IssueMiddleware();
 
-IssueRouter.post('/', authenticate_jwtStrategy, IssueModel.sanitize_post_middleware, async (req, res, next) => {
+IssueRouter.post('/', IssueModel.sanitize_post_middleware, async (req, res, next) => {
     const client = await db.client();
     const SanitizerUtil = new Sanitizer();
     try {
@@ -44,7 +43,7 @@ IssueRouter.post('/', authenticate_jwtStrategy, IssueModel.sanitize_post_middlew
     }
 }, Issue_Middleware.log_post_middleware);
 
-IssueRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
+IssueRouter.get('/:id', async (req, res) => {
     const client = await db.client();
     try {
         const {id} = req.params;
@@ -66,7 +65,7 @@ IssueRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
 });
 
 //my issues
-IssueRouter.get('/', authenticate_jwtStrategy, async (req, res) => {
+IssueRouter.get('/', async (req, res) => {
     const client = await db.client();
     const paginator = new Paginator(req.query.limit, req.query.offset);
     try {
@@ -99,7 +98,7 @@ IssueRouter.get('/', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-IssueRouter.put('/:id', authenticate_jwtStrategy, IssueModel.sanitize_put_middleware, Issue_Middleware.log_put_middleware, async (req, res) => {
+IssueRouter.put('/:id', IssueModel.sanitize_put_middleware, Issue_Middleware.log_put_middleware, async (req, res) => {
     const {id} = req.params;
     const {client} = req;
     try {
@@ -122,7 +121,7 @@ IssueRouter.put('/:id', authenticate_jwtStrategy, IssueModel.sanitize_put_middle
     }
 });
 
-IssueRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
+IssueRouter.delete('/:id', async (req, res) => {
     const client = await db.client();
     try {
         const {id} = req.params;
@@ -150,7 +149,7 @@ IssueRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
     //update issue set sprint_id = null where sprint_id=$1 returning *;
 });
 
-IssueRouter.post('/assignee/:id', authenticate_jwtStrategy, IssueModel.sanitize_post_assignee_middleware, async (req, res, next) => {
+IssueRouter.post('/assignee/:id', IssueModel.sanitize_post_assignee_middleware, async (req, res, next) => {
     const {id} = req.params;
     const client = await db.client();
 
@@ -177,7 +176,7 @@ IssueRouter.post('/assignee/:id', authenticate_jwtStrategy, IssueModel.sanitize_
     }
 }, Issue_Middleware.log_post_assignee_middleware);
 
-IssueRouter.delete('/assignee/:id', authenticate_jwtStrategy, IssueModel.sanitize_delete_assignee_middleware, async (req, res, next) => {
+IssueRouter.delete('/assignee/:id', IssueModel.sanitize_delete_assignee_middleware, async (req, res, next) => {
     const {id} = req.params;
     const client = await db.client();
     try {

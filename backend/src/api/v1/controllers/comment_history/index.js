@@ -1,5 +1,4 @@
 import {Router} from 'express';
-import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
 import HttpResponse from "../../../../utils/HttpResponse";
 import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
@@ -9,7 +8,7 @@ const CommentHistoryRouter = Router();
 
 const ResponseUtil = new HttpResponse();
 
-CommentHistoryRouter.get('/issues/:issueId', authenticate_jwtStrategy, async (req, res) => {
+CommentHistoryRouter.get('/issues/:issueId', async (req, res) => {
     const client = await db.client();
     const paginator = new Paginator(req.query.limit, req.query.offset);
     const {issueId} = req.params;

@@ -1,5 +1,4 @@
 import {Router} from 'express';
-import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
 import HttpResponse from "../../../../utils/HttpResponse";
 import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
@@ -9,7 +8,7 @@ const TimeTrackingHistoryRouter = Router();
 
 const ResponseUtil = new HttpResponse();
 
-TimeTrackingHistoryRouter.get('/time_trackings/:timeTrackingId', authenticate_jwtStrategy, async (req, res) => {
+TimeTrackingHistoryRouter.get('/time_trackings/:timeTrackingId', async (req, res) => {
     const client = await db.client();
     const paginator = new Paginator(req.query.limit, req.query.offset);
 
@@ -27,7 +26,11 @@ TimeTrackingHistoryRouter.get('/time_trackings/:timeTrackingId', authenticate_jw
         const has_more = paginator.get_hasMore(total_count);
 
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, {time_tracking_histories: getTimeTrackingHistories_R.rows, total_count, has_more});
+        ResponseUtil.setResponse(200, ResponseFlag.OK, {
+            time_tracking_histories: getTimeTrackingHistories_R.rows,
+            total_count,
+            has_more
+        });
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
@@ -38,7 +41,7 @@ TimeTrackingHistoryRouter.get('/time_trackings/:timeTrackingId', authenticate_jw
     }
 });
 
-TimeTrackingHistoryRouter.get('/issues/:issueId', authenticate_jwtStrategy, async (req, res) => {
+TimeTrackingHistoryRouter.get('/issues/:issueId', async (req, res) => {
     const client = await db.client();
     const paginator = new Paginator(req.query.limit, req.query.offset);
     try {
@@ -55,7 +58,11 @@ TimeTrackingHistoryRouter.get('/issues/:issueId', authenticate_jwtStrategy, asyn
         const has_more = paginator.get_hasMore(total_count);
 
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, {time_tracking_histories: getTimeTrackingHistories_R.rows, total_count, has_more});
+        ResponseUtil.setResponse(200, ResponseFlag.OK, {
+            time_tracking_histories: getTimeTrackingHistories_R.rows,
+            total_count,
+            has_more
+        });
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');

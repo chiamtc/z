@@ -1,5 +1,4 @@
 import {Router} from 'express';
-import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
 import HttpResponse from "../../../../utils/HttpResponse";
 import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
@@ -10,7 +9,7 @@ const ProjectRouter = Router();
 
 const ResponseUtil = new HttpResponse();
 
-ProjectRouter.post('/', authenticate_jwtStrategy, async (req, res, next) => {
+ProjectRouter.post('/', async (req, res, next) => {
     const client = await db.client();
     try {
         const SanitizerUtil = new Sanitizer();
@@ -39,12 +38,12 @@ ProjectRouter.post('/', authenticate_jwtStrategy, async (req, res, next) => {
         await client.query('rollback');
         ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE}. Error: ${e}`);
         ResponseUtil.responds(res);
-    } finally{
+    } finally {
         await client.release();
     }
 });
 
-ProjectRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
+ProjectRouter.get('/:id', async (req, res) => {
     const client = await db.client();
 
     try {
@@ -64,7 +63,7 @@ ProjectRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
 });
 
 //my project
-ProjectRouter.get('/', authenticate_jwtStrategy, async (req, res) => {
+ProjectRouter.get('/', async (req, res) => {
     const client = await db.client();
     const paginator = new Paginator(req.query.limit, req.query.offset);
 
@@ -91,7 +90,7 @@ ProjectRouter.get('/', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-ProjectRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
+ProjectRouter.delete('/:id', async (req, res) => {
     const client = await db.client();
     let deleteProject_Q_values = [];
     try {
@@ -124,7 +123,7 @@ ProjectRouter.delete('/:id', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-ProjectRouter.put('/:id', authenticate_jwtStrategy, async (req, res) => {
+ProjectRouter.put('/:id', async (req, res) => {
     let f;
     const client = await db.client();
     const {id} = req.params;

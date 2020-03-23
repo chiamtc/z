@@ -1,5 +1,4 @@
 import {Router} from 'express';
-import {authenticate_jwtStrategy} from "../../../../auth/local_strategy_utils";
 import HttpRequest from "../../../../utils/HttpRequest";
 import HttpResponse from "../../../../utils/HttpResponse";
 import ResponseFlag from "../../../../constants/response_flag";
@@ -16,7 +15,7 @@ const RequestUtil = new HttpRequest();
 const TimeTrackingModel = new TimeTracking();
 const TimeTracking_Middleware = new TimeTrackingMiddleware();
 
-TimeTrackingRouter.post('/', authenticate_jwtStrategy, TimeTrackingModel.sanitize_post_middleware, async (req, res, next) => {
+TimeTrackingRouter.post('/', TimeTrackingModel.sanitize_post_middleware, async (req, res, next) => {
     const client = await db.client();
     const SanitizerUtil = new Sanitizer();
     try {
@@ -36,7 +35,7 @@ TimeTrackingRouter.post('/', authenticate_jwtStrategy, TimeTrackingModel.sanitiz
     }
 }, TimeTracking_Middleware.log_post_middleware);
 
-TimeTrackingRouter.get('/issues/:issueId', authenticate_jwtStrategy, async (req, res) => {
+TimeTrackingRouter.get('/issues/:issueId', async (req, res) => {
     const client = await db.client();
     try {
         const {issueId} = req.params;
@@ -57,7 +56,7 @@ TimeTrackingRouter.get('/issues/:issueId', authenticate_jwtStrategy, async (req,
     }
 });
 
-TimeTrackingRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
+TimeTrackingRouter.get('/:id', async (req, res) => {
     const client = await db.client();
     try {
         const {id} = req.params;
@@ -78,7 +77,7 @@ TimeTrackingRouter.get('/:id', authenticate_jwtStrategy, async (req, res) => {
     }
 });
 
-TimeTrackingRouter.put('/:id', authenticate_jwtStrategy, TimeTrackingModel.sanitize_put_middleware, TimeTracking_Middleware.log_put_middleware, async (req, res) => {
+TimeTrackingRouter.put('/:id', TimeTrackingModel.sanitize_put_middleware, TimeTracking_Middleware.log_put_middleware, async (req, res) => {
     const tt = new TimeTracking();
     const {id} = req.params;
     const {client} = req;
