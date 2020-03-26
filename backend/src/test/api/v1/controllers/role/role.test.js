@@ -64,7 +64,7 @@ describe('tests /roles endpoint', () => {
             });
     });
 
-    it('POST/ role_name successfully', (done) => {
+    it('POST/ roles successfully', (done) => {
         chai.request('localhost:3000')
             .post('/api/v1/roles')
             .set('Authorization', `Bearer ${accessToken}`)
@@ -91,7 +91,7 @@ describe('tests /roles endpoint', () => {
 
     });
 
-    it('POST/ role_name fails due to invalid project_id', (done) => {
+    it('POST/ roles fails due to invalid project_id', (done) => {
         chai.request('localhost:3000')
             .post('/api/v1/roles')
             .set('Authorization', `Bearer ${accessToken}`)
@@ -111,7 +111,7 @@ describe('tests /roles endpoint', () => {
             });
     });
 
-    it('GET/:id role_name successfully', (done) => {
+    it('GET/:id roles successfully', (done) => {
         chai.request('localhost:3000')
             .get(`/api/v1/roles/${roleId}`)
             .set('Authorization', `Bearer ${accessToken}`)
@@ -132,7 +132,7 @@ describe('tests /roles endpoint', () => {
             });
     });
 
-    it('GET/:id role_name gets empty role_name due to invalid role_name id', (done) => {
+    it('GET/:id roles gets empty role_name due to invalid role_name id', (done) => {
         chai.request('localhost:3000')
             .get(`/api/v1/roles/999`)
             .set('Authorization', `Bearer ${accessToken}`)
@@ -151,7 +151,7 @@ describe('tests /roles endpoint', () => {
             });
     });
 
-    it('GET/:id fails due to absence of jwt token', (done) => {
+    it('GET/:id roles fails due to absence of jwt token', (done) => {
         chai.request('localhost:3000')
             .get(`/api/v1/roles/${roleId}`)
             .end((err, res) => {
@@ -169,7 +169,7 @@ describe('tests /roles endpoint', () => {
             });
     });
 
-    it('GET/projects/:projectId role_name successfully', (done) => {
+    it('GET/projects/:projectId roles successfully', (done) => {
         chai.request('localhost:3000')
             .get(`/api/v1/roles/projects/${projectId}`)
             .set('Authorization', `Bearer ${accessToken}`)
@@ -191,7 +191,7 @@ describe('tests /roles endpoint', () => {
             });
     });
 
-    it('GET/projects/:projectId role_name fails due to absence of jwt', (done) => {
+    it('GET/projects/:projectId roles fails due to absence of jwt', (done) => {
         chai.request('localhost:3000')
             .get(`/api/v1/roles/projects/${projectId}`)
             .end((err, res) => {
@@ -209,7 +209,7 @@ describe('tests /roles endpoint', () => {
             });
     });
 
-    it('GET/:id role_name gets empty role_name due to invalid project id', (done) => {
+    it('GET/:id roles gets empty role_name due to invalid project id', (done) => {
         chai.request('localhost:3000')
             .get(`/api/v1/roles/projects/999`)
             .set('Authorization', `Bearer ${accessToken}`)
@@ -228,7 +228,7 @@ describe('tests /roles endpoint', () => {
             });
     });
 
-    it('PUT/:id update role successfully', (done) => {
+    it('PUT/:id update roles successfully', (done) => {
         chai.request('localhost:3000')
             .put(`/api/v1/roles/1`)
             .set('Authorization', `Bearer ${accessToken}`)
@@ -250,7 +250,7 @@ describe('tests /roles endpoint', () => {
             });
     });
 
-    it('DELETE/:id update role successfully', (done) => {
+    it('DELETE/:id update roles successfully', (done) => {
         chai.request('localhost:3000')
             .delete(`/api/v1/roles/1`)
             .set('Authorization', `Bearer ${accessToken}`)

@@ -2,8 +2,8 @@ import HttpResponse from "../../../utils/HttpResponse";
 import Sanitizer from "../../../utils/Sanitizer";
 import ResponseFlag from "../../../constants/response_flag";
 
-export default class Role{
-    constructor(){
+export default class Role {
+    constructor() {
 
     }
 
@@ -22,5 +22,9 @@ export default class Role{
             ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
             ResponseUtil.responds(res);
         }
+    }
+
+    enum_to_array(enum_str) {
+        return enum_str.slice(1, enum_str.length - 1).split(",");
     }
 }

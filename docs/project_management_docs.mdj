@@ -1420,20 +1420,35 @@
 											"top": 249,
 											"width": 248.73779296875,
 											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "AAAAAAFxFwaEgIgaUN8=",
+											"_parent": {
+												"$ref": "AAAAAAFwo6NPhMbOszA="
+											},
+											"model": {
+												"$ref": "AAAAAAFxFwaEVYgXXTM="
+											},
+											"font": "Arial;13;0",
+											"left": 365,
+											"top": 264,
+											"width": 248.73779296875,
+											"height": 13
 										}
 									],
 									"font": "Arial;13;0",
 									"left": 360,
 									"top": 199,
 									"width": 258.73779296875,
-									"height": 68
+									"height": 83
 								}
 							],
 							"font": "Arial;13;0",
 							"left": 360,
 							"top": 176,
 							"width": 258.73779296875,
-							"height": 91,
+							"height": 106,
 							"nameLabel": {
 								"$ref": "AAAAAAFwo6NPhMbNfeY="
 							},
@@ -6754,6 +6769,16 @@
 								"$ref": "AAAAAAFwo6NPhMbKpkA="
 							},
 							"name": "created_date",
+							"type": "TIMESTAMPTZ",
+							"length": 0
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "AAAAAAFxFwaEVYgXXTM=",
+							"_parent": {
+								"$ref": "AAAAAAFwo6NPhMbKpkA="
+							},
+							"name": "updated_date",
 							"type": "TIMESTAMPTZ",
 							"length": 0
 						}

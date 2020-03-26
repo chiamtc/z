@@ -35,7 +35,8 @@
     "test:time_tracking": "jest src/test/api/v1/controllers/time_tracking/time_tracking.test.js --config jest.config.json",
     "test:time_tracking_history": "jest src/test/api/v1/controllers/time_tracking_history/time_tracking_history.test.js --config jest.config.json",
     "test:role": "jest src/test/api/v1/controllers/role/role.test.js --config jest.config.json",
-    "test:permission": "jest src/test/api/v1/controllers/permission/permission.test.js --config jest.config.json"
+    "test:permission": "jest src/test/api/v1/controllers/permission/permission.test.js --config jest.config.json",
+    "test:role_permission": "jest src/test/api/v1/controllers/role_permission/role_permission.test.js --config jest.config.json"
   },
   "dependencies": {
     "@babel/cli": "^7.7.4",

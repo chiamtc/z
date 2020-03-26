@@ -4,23 +4,22 @@ import ResponseFlag from "../../../../constants/response_flag";
 import db from "../../../../db";
 import Sanitizer from "../../../../utils/Sanitizer";
 import Paginator from "../../../../utils/Paginator";
+import Project from "../../models/Project";
 
 const ProjectRouter = Router();
-
+const ProjectModel = new Project();
 const ResponseUtil = new HttpResponse();
 
-ProjectRouter.post('/', async (req, res, next) => {
+ProjectRouter.post('/', ProjectModel.sanitize_post_middleware, async (req, res, next) => {
     const client = await db.client();
     try {
         const SanitizerUtil = new Sanitizer();
-        const body = req.body;
         await client.query('begin');
 
         // not doing sanitizer reference with map because it's only 4 values to insert.
         //create project
-        const createProject_Q_values = [body.project_name, body.project_desc, body.project_type, req.user.person_id];
-        const createProject_Q = `insert into project(project_name, project_desc, project_type, project_lead) values(${SanitizerUtil.build_values(createProject_Q_values)}) returning *`;
-        const createProject_R = await client.query(createProject_Q, createProject_Q_values);
+        const createProject_Q = `insert into project(${req.post_ops.query_string}) values(${SanitizerUtil.build_values(req.post_ops.query_val)}) returning *`;
+        const createProject_R = await client.query(createProject_Q, req.post_ops.query_val);
 
         //create project_participant
         const updateProjParti_Q_values = [parseInt(createProject_R.rows[0].project_id), parseInt(req.user.person_id)];
@@ -123,29 +122,13 @@ ProjectRouter.delete('/:id', async (req, res) => {
     }
 });
 
-//TODO sanitizer
-ProjectRouter.put('/:id', async (req, res) => {
-    let f;
+ProjectRouter.put('/:id', ProjectModel.sanitize_put_middleware, async (req, res) => {
     const client = await db.client();
     const {id} = req.params;
-    const SanitizerUtil = new Sanitizer();
-
-    const updateProject_ref = new Map();
-    updateProject_ref.set('project_name', 's');
-    updateProject_ref.set('project_desc', 's');
-    updateProject_ref.set('project_lead', 'd');
-    try {
-        SanitizerUtil.sanitize_reference = updateProject_ref;
-        SanitizerUtil.sanitize_request(req.body);
-        f = SanitizerUtil.build_query('put');
-    } catch (e) {
-        ResponseUtil.setResponse(500, ResponseFlag.INTERNAL_ERROR, `Source: ${res.req.originalUrl} - Sanitizing Process: ${e.message}`);
-        ResponseUtil.responds(res);
-    }
 
     try {
-        const updateProject_Q_values = [...f.query_val, id]
-        const updateProject_Q = `update project set ${f.query_string} where project_id=$${updateProject_Q_values.length} returning *`;
+        const updateProject_Q_values = [...req.put_ops.query_val, id]
+        const updateProject_Q = `update project set ${req.put_ops.query_string} where project_id=$${updateProject_Q_values.length} returning *`;
         const updateProject_R = await client.query(updateProject_Q, updateProject_Q_values);
         ResponseUtil.setResponse(200, ResponseFlag.OK, updateProject_R.rows[0]);
         ResponseUtil.responds(res);

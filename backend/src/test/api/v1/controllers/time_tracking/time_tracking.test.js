@@ -67,7 +67,8 @@ describe('tests /time_tracking endpoint', () => {
                             .send({
                                 project_name: c.projectName,
                                 project_desc: c.projectDesc,
-                                project_type: c.projectType
+                                project_type: c.projectType,
+                                project_lead: res.body.data.auth_user_id
                             })
                             .end((err, res) => {
                                 const body = res.body.data;

@@ -31,14 +31,16 @@ RoleRouter.post('/', async (req, res, next) => {
     let client = await db.client();
     try {
         const {body} = req;
-        console.log(body);
+        const grants = body.grants || "['auth_user','person']";
         const createRole_Q_values = [body.role_name, body.description, body.project_id];
         client.query('begin');
-        const createRole_Q = `insert into role(role_name, description, project_id, grants) values($1,$2,$3, ARRAY${body.grants}::grants_enum[]) returning *`;
+        const createRole_Q = `insert into role(role_name, description, project_id, grants) values($1,$2,$3, ARRAY${grants}::grants_enum[]) returning *`;
         const createRole_R = await client.query(createRole_Q, createRole_Q_values);
         client.query('commit');
 
-        ResponseUtil.setResponse(201, ResponseFlag.OK, createRole_R.rows[0]);
+        const role = createRole_R.rows[0];
+        role.grants = RoleModel.enum_to_array(role.grants);
+        ResponseUtil.setResponse(201, ResponseFlag.OK, role);
         ResponseUtil.responds(res);
     } catch (e) {
         console.log('e', e)
@@ -57,11 +59,11 @@ RoleRouter.get('/:id', async (req, res, next) => {
         const getRole_Q_values = [id];
         const getRole_Q = `select * from role where role_id = $1 `;
         const getRole_R = await client.query(getRole_Q, getRole_Q_values);
-        if(getRole_R.rows.length !== 0 ){
+        if (getRole_R.rows.length !== 0) {
             const role = getRole_R.rows[0];
-            role.grants= role.grants.slice(1,role.grants.length-1).split(",");
+            role.grants = RoleModel.enum_to_array(role.grants);
             ResponseUtil.setResponse(200, ResponseFlag.OK, role);
-        }else ResponseUtil.setResponse(200, ResponseFlag.OK,  {});
+        } else ResponseUtil.setResponse(200, ResponseFlag.OK, {});
         ResponseUtil.responds(res);
     } catch (e) {
         ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);
@@ -91,15 +93,23 @@ RoleRouter.put('/:id', RoleModel.sanitize_put_middleware, async (req, res, next)
     try {
         const {id} = req.params;
         await client.query('begin');
+        let qs = '';
+        if (req.body.grants) {
+            const comma = req.put_ops.query_string.length !== 0 ? `${req.put_ops.query_string},` : '';
+            qs = `${comma} grants=array${req.body.grants}::grants_enum[]`
+        } else qs = `${req.put_ops.query_string}`;
 
         //update comment
         const updateRole_Q_values = [...req.put_ops.query_val, id];
-        const updateRole_Q = `update role set ${req.put_ops.query_string} where role_id=$${updateRole_Q_values.length} returning *`;
+        const updateRole_Q = `update role set ${qs} where role_id=$${updateRole_Q_values.length} returning *`;
         console.log(updateRole_Q)
         const updateRole_R = await client.query(updateRole_Q, updateRole_Q_values);
 
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, updateRole_R.rows.length !== 0? updateRole_R.rows[0]: {});
+        const role = updateRole_R.rows[0];
+        role.grants = RoleModel.enum_to_array(role.grants);
+        ResponseUtil.setResponse(200, ResponseFlag.OK, role);
+        ResponseUtil.setResponse(200, ResponseFlag.OK, updateRole_R.rows.length !== 0 ? updateRole_R.rows[0] : {});
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
@@ -123,7 +133,10 @@ RoleRouter.delete('/:id', async (req, res, next) => {
         const deleteRole_R = await client.query(deleteRole_Q, deleteRole_Q_values);
 
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, deleteRole_R.rows.length !== 0? {deleted:true, role:deleteRole_R.rows[0]}: {deleted:false});
+        ResponseUtil.setResponse(200, ResponseFlag.OK, deleteRole_R.rows.length !== 0 ? {
+            deleted: true,
+            role: deleteRole_R.rows[0]
+        } : {deleted: false});
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');

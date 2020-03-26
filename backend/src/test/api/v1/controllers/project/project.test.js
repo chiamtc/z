@@ -9,7 +9,7 @@ import ResponseFlag from "../../../../../constants/response_flag";
 
 chai.use(chaiHttp);
 describe('tests /project endpoint', () => {
-    let accessToken;
+    let accessToken, userId;
     beforeAll(async (done) => {
         await exec('npm run db:down');
         await exec('npm run db:general:up');
@@ -38,6 +38,7 @@ describe('tests /project endpoint', () => {
                         assert.isNotEmpty(res.body.data);
                         assert.equal(body.email, c.email);
                         accessToken = res.body.data.accessToken;
+                        userId = res.body.data.auth_user_id
 
                         expect(body).to.have.property('auth_user_id');
                         expect(body).to.have.property('email');
@@ -68,13 +69,15 @@ describe('tests /project endpoint', () => {
     })
 
     it('POST/ project successfully', (done) => {
+        console.log(userId);
         chai.request('localhost:3000')
             .post('/api/v1/projects')
             .set('Authorization', `Bearer ${accessToken}`)
             .send({
                 project_name: c.projectName,
                 project_desc: c.projectDesc,
-                project_type: c.projectType
+                project_type: c.projectType,
+                project_lead: userId
             })
             .end((err, res) => {
                 const body = res.body.data;
