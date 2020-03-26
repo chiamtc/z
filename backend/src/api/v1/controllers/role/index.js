@@ -31,9 +31,10 @@ RoleRouter.post('/', async (req, res, next) => {
     let client = await db.client();
     try {
         const {body} = req;
+        console.log(body);
         const createRole_Q_values = [body.role_name, body.description, body.project_id];
         client.query('begin');
-        const createRole_Q = `insert into role(role_name, description, project_id) values($1,$2,$3) returning *`;
+        const createRole_Q = `insert into role(role_name, description, project_id, grants) values($1,$2,$3, ARRAY${body.grants}::grants_enum[]) returning *`;
         const createRole_R = await client.query(createRole_Q, createRole_Q_values);
         client.query('commit');
 
@@ -56,7 +57,11 @@ RoleRouter.get('/:id', async (req, res, next) => {
         const getRole_Q_values = [id];
         const getRole_Q = `select * from role where role_id = $1 `;
         const getRole_R = await client.query(getRole_Q, getRole_Q_values);
-        ResponseUtil.setResponse(200, ResponseFlag.OK, getRole_R.rows.length !== 0 ? getRole_R.rows[0] : {});
+        if(getRole_R.rows.length !== 0 ){
+            const role = getRole_R.rows[0];
+            role.grants= role.grants.slice(1,role.grants.length-1).split(",");
+            ResponseUtil.setResponse(200, ResponseFlag.OK, role);
+        }else ResponseUtil.setResponse(200, ResponseFlag.OK,  {});
         ResponseUtil.responds(res);
     } catch (e) {
         ResponseUtil.setResponse(500, ResponseFlag.API_ERROR, `${res.req.originalUrl} ${ResponseFlag.API_ERROR_MESSAGE} Error: ${e}`);

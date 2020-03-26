@@ -255,7 +255,8 @@ describe('tests /roles endpoint', () => {
             .delete(`/api/v1/roles/1`)
             .set('Authorization', `Bearer ${accessToken}`)
             .end((err, res) => {
-                const body = res.body.data;
+                const body = res.body.data.role;
+
                 assert.equal(res.body.status, 200);
                 assert.isNotEmpty(res.body.data);
                 assert.equal(body.description, c.description);

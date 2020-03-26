@@ -5,4 +5,3 @@ begin
     return new;
 end;
 $$ LANGUAGE plpgsql;
-
