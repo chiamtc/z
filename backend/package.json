@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node ./bin/www",
     "serve": " nodemon --exec babel-node src/index.js",
-    "db:down": "db-migrate down -c 15 --config ./database/database.json --migrations-dir ./database/migrations",
+    "db:down": "db-migrate down -c 16 --config ./database/database.json --migrations-dir ./database/migrations",
     "db:general:up": "db-migrate up 20200311004346-general --config ./database/database.json --migrations-dir ./database/migrations",
     "db:user:up": "db-migrate up 20200311004401-auth-user --config ./database/database.json --migrations-dir ./database/migrations",
     "db:person:up": "db-migrate up 20200311004406-person --config ./database/database.json --migrations-dir ./database/migrations",
@@ -19,6 +19,9 @@
     "db:comment_history:up": "db-migrate up 20200319003026-comment-history --config ./database/database.json --migrations-dir ./database/migrations",
     "db:time_tracking:up": "db-migrate up 20200319020930-time-tracking --config ./database/database.json --migrations-dir ./database/migrations",
     "db:time_tracking_history:up": "db-migrate up 20200320042006-time-tracking-history --config ./database/database.json --migrations-dir ./database/migrations",
+    "db:role:up": "db-migrate up 20200311050018-role --config ./database/database.json --migrations-dir ./database/migrations",
+    "db:permission:up": "db-migrate up 20200311040018-permission --config ./database/database.json --migrations-dir ./database/migrations",
+    "db:role-permission:up": "db-migrate up 20200311060018-permission --config ./database/database.json --migrations-dir ./database/migrations",
     "test:signup": "jest src/test/api/v1/controllers/auth_user/signup.test.js --config jest.config.json",
     "test:login": "jest src/test/api/v1/controllers/auth_user/login.test.js --config jest.config.json",
     "test:me": "jest src/test/api/v1/controllers/person/me.test.js --config jest.config.json",
@@ -30,7 +33,8 @@
     "test:comment": "jest src/test/api/v1/controllers/comment/comment.test.js --config jest.config.json",
     "test:comment_history": "jest src/test/api/v1/controllers/comment_history/comment_history.test.js --config jest.config.json",
     "test:time_tracking": "jest src/test/api/v1/controllers/time_tracking/time_tracking.test.js --config jest.config.json",
-    "test:time_tracking_history": "jest src/test/api/v1/controllers/time_tracking_history/time_tracking_history.test.js --config jest.config.json"
+    "test:time_tracking_history": "jest src/test/api/v1/controllers/time_tracking_history/time_tracking_history.test.js --config jest.config.json",
+    "test:role": "jest src/test/api/v1/controllers/role/role.test.js --config jest.config.json"
   },
   "dependencies": {
     "@babel/cli": "^7.7.4",

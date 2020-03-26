@@ -123,6 +123,7 @@ ProjectRouter.delete('/:id', async (req, res) => {
     }
 });
 
+//TODO sanitizer
 ProjectRouter.put('/:id', async (req, res) => {
     let f;
     const client = await db.client();

@@ -34,6 +34,6 @@ export const authenticate_loginStrategy = (req, res, next) => {
             ResponseUtil.setResponse(500, ResponseFlag.AUTH_ERROR, ResponseFlag.INVALID_CREDENTIALS);
             ResponseUtil.responds(res);
         }
-        next();
+        // next();
     })(req, res, next)
 };

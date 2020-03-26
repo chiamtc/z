@@ -1,6 +1,8 @@
 import {Router} from 'express';
 const APIRouter = Router();
 
+import {authenticate_jwtStrategy} from "../../auth/local_strategy_utils";
+
 import AuthUserRouter from './controllers/auth_user';
 import ProjectRouter from "./controllers/project";
 import PersonRouter from "./controllers/person";
@@ -11,8 +13,7 @@ import CommentRouter from "./controllers/comment";
 import CommentHistoryRouter from "./controllers/comment_history";
 import TimeTrackingRouter from "./controllers/time_tracking";
 import TimeTrackingHistoryRouter from "./controllers/time_tracking_history";
-import {authenticate_jwtStrategy} from "../../auth/local_strategy_utils";
-
+import RoleRouter from "./controllers/role";
 
 APIRouter.use('/users', AuthUserRouter);
 
@@ -26,5 +27,6 @@ APIRouter.use('/comments', CommentRouter);
 APIRouter.use('/comment_histories', CommentHistoryRouter);
 APIRouter.use('/time_tracking', TimeTrackingRouter);
 APIRouter.use('/time_tracking_histories', TimeTrackingHistoryRouter);
+APIRouter.use('/roles', RoleRouter);
 
 export default APIRouter;

@@ -23,3 +23,6 @@ export const sprintStartDate = faker.date.past();
 export const sprintEndDate = faker.date.future();
 
 export const commentContent = faker.lorem.paragraphs();
+
+export const role_name = faker.lorem.words();
+export const description = faker.lorem.sentences();
