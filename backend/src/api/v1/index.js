@@ -14,6 +14,7 @@ import CommentHistoryRouter from "./controllers/comment_history";
 import TimeTrackingRouter from "./controllers/time_tracking";
 import TimeTrackingHistoryRouter from "./controllers/time_tracking_history";
 import RoleRouter from "./controllers/role";
+import PermissionRouter from "./controllers/permission";
 
 APIRouter.use('/users', AuthUserRouter);
 
@@ -28,5 +29,6 @@ APIRouter.use('/comment_histories', CommentHistoryRouter);
 APIRouter.use('/time_tracking', TimeTrackingRouter);
 APIRouter.use('/time_tracking_histories', TimeTrackingHistoryRouter);
 APIRouter.use('/roles', RoleRouter);
+APIRouter.use('/permissions', PermissionRouter);
 
 export default APIRouter;

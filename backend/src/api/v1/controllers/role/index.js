@@ -5,12 +5,10 @@ import db from "../../../../db";
 import Sanitizer from "../../../../utils/Sanitizer";
 import Paginator from "../../../../utils/Paginator";
 import Role from "../../models/Role";
-import Permission from "../../models/Permission";
 
 const RoleRouter = Router();
 const ResponseUtil = new HttpResponse();
 const RoleModel = new Role();
-const PermissionModel = new Permission();
 /*
  -> create permission
     - can create,
@@ -120,7 +118,7 @@ RoleRouter.delete('/:id', async (req, res, next) => {
         const deleteRole_R = await client.query(deleteRole_Q, deleteRole_Q_values);
 
         await client.query('commit');
-        ResponseUtil.setResponse(200, ResponseFlag.OK, deleteRole_R.rows.length !== 0? deleteRole_R.rows[0]: {});
+        ResponseUtil.setResponse(200, ResponseFlag.OK, deleteRole_R.rows.length !== 0? {deleted:true, role:deleteRole_R.rows[0]}: {deleted:false});
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
@@ -130,6 +128,5 @@ RoleRouter.delete('/:id', async (req, res, next) => {
         await client.release();
     }
 });
-
 
 export default RoleRouter;
