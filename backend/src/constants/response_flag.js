@@ -11,7 +11,8 @@ const ResponseFlag = {
     API_ERROR_MESSAGE:'experiences issue',
     OBJECT_NOT_FOUND:'Object not found',
     OBJECT_NOT_DELETED:'Object not deleted',
-    OBJECT_NOT_UPDATED:'Object was not updated '
+    OBJECT_NOT_UPDATED:'Object was not updated ',
+    STORAGE_API_ERROR:'storage'
 };
 
 export default ResponseFlag;
