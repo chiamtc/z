@@ -1,44 +1,34 @@
 import minio_client from "./setup";
 import fs from "fs";
 import util from 'util';
+import MinioPromise from "./Minio-Promise";
 
 export default class PureMinio_Admin {
-    cosntructor() {
-
+    constructor() {
+        this.minio_promise = new MinioPromise();
     }
 
     async create(bucket_name) {
-        const makeBucket = util.promisify((bucket_name, cb) => minio_client.makeBucket(bucket_name, (err) => cb(err)))
-        return await makeBucket(bucket_name);
+        const mb = this.minio_promise.makeBucket();
+        return await mb(bucket_name);
     }
 
     async list_buckets() {
-        const listBuckets = util.promisify((cb) => minio_client.listBuckets((err, ...results) => cb(err, results[0])));
-        return await listBuckets();
+        const lb = this.minio_promise.listBuckets();
+        return await lb();
     }
 
     async delete_bucket(bucket_name) {
-        const removeBucket = util.promisify((bucket_name, cb) => minio_client.removeBucket(bucket_name, (err) => cb(err)));
-        return await removeBucket(bucket_name);
+        const rb = this.minio_promise.removeBucket();
+        return await rb(bucket_name);
     }
 
-    upload_file(file) {
+    async upload_file(file) {
         var fileStream = fs.createReadStream(file.path);
-        return new Promise((resolve, reject) => {
-            var fileStat = fs.stat(file.path, function (err2, stats) {
-                if (err2) {
-                    console.log('err2', err2)
-                    reject(err2.message);
-                }
-                minio_client.putObject('bucket1', file.name, fileStream, stats.size, function (err3, etag) {
-                    if (err3) {
-                        console.log('err3', err3)
-                        reject(err3.message);
-                    }
-                    resolve(etag);
-                })
-            });
-        })
+        const fsStat = util.promisify(fs.stat);
+        const stat = await fsStat(file.path);
+        const po = this.minio_promise.putObject();
+        return await po('bucket1', file.name, fileStream, stat.size);
     }
 
     error_handler(reject, ops, err) {

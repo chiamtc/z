@@ -6,6 +6,8 @@ import ResponseFlag from "../../../../../../constants/response_flag";
 import Formidable from 'formidable'
 import fs from 'fs';
 import util from 'util';
+import bytes from 'bytes';
+import minio_client from "../../../../models/storage/minio/minio/setup";
 
 const MinioStorage_Admin_Router = Router();
 
@@ -51,25 +53,52 @@ MinioStorage_Admin_Router.delete('/buckets/:bucketName', async (req, res, next) 
 
 MinioStorage_Admin_Router.post('/upload', async (req, res, next) => {
     const form = new Formidable();
-    //TODO tidy this shit up
-    const unlink = util.promisify(fs.unlink);
-    form.parse(req, async (err, fields, files) => {
-        const myfile = files.files_1;
-        const a = await admin.upload_file(myfile);
-        console.log('a', a)
-        await unlink(files.files_1.path);
-        // fs.unlink(files.files_1.path, (err) => {
-        //     if(err){ console.log(err); }
-        //     console.log('temp file deleted')
-        // });
-        ResponseUtil.setResponse(200, ResponseFlag.OK, {
-            uploaded: true,
-            fileName: files.files_1.name,
-            location: `bucket1`,
-            fileSize: `${files.files_1.size} bytes`
+    try {
+        const unlink = util.promisify(fs.unlink);
+        form.parse(req, async (err, fields, files) => {
+            const myfile = files.files_1;
+            await admin.upload_file(myfile);
+            await unlink(myfile.path);
+
+            var size = 0
+            let data;
+            /*
+            //source:https://gist.github.com/nesimtunc/fe46687589a6940fbe941dee99d3ba89
+            minio_client.getObject('bucket1', files.files_1.name, function(err, dataStream) {
+                if (err) {
+                    return console.log(err)
+                }
+               dataStream.on('data', function(chunk) {
+                    size += chunk.length
+                    data = !data ? new Buffer(chunk) : Buffer.concat([data, chunk]);
+                })
+                dataStream.on('end', function() {
+                    console.log('End. Total size = ' + size)
+                    res.writeHead(200, {'Content-Type': 'image/jpeg'});
+                    res.write(data);
+                    res.end();
+
+                })
+                dataStream.on('error', function(err) {
+                    console.log(err)
+                })
+              // dataStream.pipe(res); //source: https://www.thepolyglotdeveloper.com/2017/03/upload-files-minio-object-storage-cloud-node-js-multer/
+            })*/
+
+            ResponseUtil.setResponse(200, ResponseFlag.OK, {
+                uploaded: true,
+                fileName: files.files_1.name,
+                location: `bucket1`,
+                fileSize: `${bytes(files.files_1.size)}`,
+                linkUrl: `localhost:3001/bucket1/${files.files_1.name}` //source: https://github.com/minio/minio-js/issues/588
+            });
+            ResponseUtil.responds(res);
         });
+    } catch (e) {
+        console.log('e', e);
+        ResponseUtil.setResponse(500, ResponseFlag.STORAGE_API_ERROR, `Storage Error: ${e.message}. Note: bucket_name can only be lowercase alphanumeric without special case`);
         ResponseUtil.responds(res);
-    });
+    }
 });
 
 export default MinioStorage_Admin_Router;
