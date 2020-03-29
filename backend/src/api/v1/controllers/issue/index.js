@@ -8,6 +8,7 @@ import Paginator from "../../../../utils/Paginator";
 import HttpRequest from "../../../../utils/HttpRequest";
 import Issue from "../../models/Issue";
 import IssueMiddleware from '../../middlewares/issue'
+import Uploader from "../../models/storage/minio/minio/Uploader";
 
 const IssueRouter = Router();
 const ResponseUtil = new HttpResponse();
@@ -205,6 +206,18 @@ IssueRouter.delete('/assignee/:id', IssueModel.sanitize_delete_assignee_middlewa
         ResponseUtil.responds(res);
     }
 }, Issue_Middleware.log_delete_assignee_middleware);
+
+IssueRouter.post('/upload/:id', Issue_Middleware.get_bucket_subpath_name, async(req,res)=>{
+    try {
+        const uploader  = new Uploader();
+        const buffer = await uploader.uploads('issues',req);
+        res.status(200).send(buffer);
+    } catch (e) {
+        console.log('e', e);
+        ResponseUtil.setResponse(500, ResponseFlag.STORAGE_API_ERROR, `Storage Error: ${e.message}.`);
+        ResponseUtil.responds(res);
+    }
+});
 
 //TODO: get all where task = req.params ?
 

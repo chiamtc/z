@@ -18,10 +18,6 @@ import PermissionRouter from "./controllers/permission";
 import RolePermissionRouter from "./controllers/role_permission";
 
 import MinioStorage_Admin_Router from "./controllers/storage/minio/minio/admin";
-import MinioStorage_NormalUser_Router from "./controllers/storage/minio/minio/user";
-
-//storage
-
 
 APIRouter.use('/users', AuthUserRouter);
 
@@ -39,6 +35,5 @@ APIRouter.use('/roles', RoleRouter);
 APIRouter.use('/permissions', PermissionRouter);
 APIRouter.use('/role_permission', RolePermissionRouter);
 APIRouter.use('/storage/minio/admin', MinioStorage_Admin_Router);
-APIRouter.use('/storage/minio/user', MinioStorage_NormalUser_Router);
 
 export default APIRouter;

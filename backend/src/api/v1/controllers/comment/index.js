@@ -7,6 +7,7 @@ import Sanitizer from "../../../../utils/Sanitizer";
 import Paginator from "../../../../utils/Paginator";
 import Comment from '../../models/Comment'
 import CommentMiddleware from '../../middlewares/comment';
+import Uploader from "../../models/storage/minio/minio/Uploader";
 
 const CommentRouter = Router();
 const RequestUtil = new HttpRequest();
@@ -114,6 +115,18 @@ CommentRouter.get('/issues/:issueId', async (req, res) => {
         ResponseUtil.responds(res);
     } finally {
         await client.release();
+    }
+});
+
+CommentRouter.post('/upload/:id', Comment_Middleware.get_bucket_subpath_name, async(req,res)=>{
+    try {
+        const uploader  = new Uploader();
+        const buffer = await uploader.uploads('comments',req);
+        res.status(200).send(buffer);
+    } catch (e) {
+        console.log('e', e);
+        ResponseUtil.setResponse(500, ResponseFlag.STORAGE_API_ERROR, `Storage Error: ${e.message}.`);
+        ResponseUtil.responds(res);
     }
 });
 

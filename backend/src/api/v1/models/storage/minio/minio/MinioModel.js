@@ -1,11 +1,11 @@
 import minio_client from "./setup";
 import fs from "fs";
 import util from 'util';
-import MinioPromise from "./Minio-Promise";
+import MinioModel_Promise from "../../../promisify/MinioModel_Promise";
 
-export default class PureMinio_Admin {
+export default class MinioModel {
     constructor() {
-        this.minio_promise = new MinioPromise();
+        this.minio_promise = new MinioModel_Promise();
     }
 
     async create(bucket_name) {
@@ -23,17 +23,21 @@ export default class PureMinio_Admin {
         return await rb(bucket_name);
     }
 
-    async upload_file(file) {
-        var fileStream = fs.createReadStream(file.path);
-        const fsStat = util.promisify(fs.stat);
-        const stat = await fsStat(file.path);
-        const po = this.minio_promise.putObject();
-        return await po('bucket1', file.name, fileStream, stat.size);
+    async bucket_exists(bucket_name){
+        const be = this.minio_promise.bucketExists();
+        return await be(bucket_name);
     }
 
-    error_handler(reject, ops, err) {
-        console.log(`minio admin > ${ops} `, err)
-        reject('Error creating a bucket', err)
+    async upload_file(bucket, bucket_path_file_name, path) {
+        var fileStream = fs.createReadStream(path);
+        const fsStat = util.promisify(fs.stat);
+        const stat = await fsStat(path);
+        const po = this.minio_promise.putObject();
+        return await po(bucket, `${bucket_path_file_name}`, fileStream, stat.size);
+    }
+
+    async get_object(bucket, file_name){
+        return await this.minio_promise.getObject(bucket, file_name);
     }
 }
 /*
