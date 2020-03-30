@@ -7,6 +7,8 @@ import db from "../../../../db";
 import Sanitizer from "../../../../utils/Sanitizer";
 import MinioModel from "../../models/storage/minio/minio/MinioModel";
 import HttpRequest from "../../../../utils/HttpRequest";
+import CommentAttachmentRouter from "../comment_attachment";
+import Paginator from "../../../../utils/Paginator";
 
 const IssueAttachmentRouter = Router();
 const ResponseUtil = new HttpResponse();
@@ -62,5 +64,67 @@ IssueAttachmentRouter.delete('/:id', IssueAttachment_Middleware.get_bucket_subpa
         ResponseUtil.responds(res);
     }
 }, IssueAttachment_Middleware.log_delete_issue_attachment_middleware);
+
+IssueAttachmentRouter.get('/files/:id', async (req, res) => {
+    const client = await db.client();
+    try {
+        const getIssueAttachment_Q_values = [req.params.id];
+        const getIssueAttachment_Q = `select * from issue_attachment where issue_attachment_id=$1`;
+        const getIssueAttachment_R = await client.query(getIssueAttachment_Q, getIssueAttachment_Q_values);
+
+        if (getIssueAttachment_R.rows.length !== 0) {
+            const {file_path, file_name, mime_type, file_size} = getIssueAttachment_R.rows[0];
+            const minioModel = new MinioModel();
+            const {buffer} = await minioModel.get_object("issues", file_path, file_name, mime_type, file_size);
+            ResponseUtil.setResponse(200, ResponseFlag.OK, {file: {...getIssueAttachment_R.rows[0]}, buffer});
+        } else ResponseUtil.setResponse(200, ResponseFlag.OK, {file: {}});
+        ResponseUtil.responds(res);
+    } catch (e) {
+        console.log('e', e);
+        ResponseUtil.setResponse(500, ResponseFlag.STORAGE_API_ERROR, `Storage Error: ${e.message}.`);
+        ResponseUtil.responds(res);
+    }
+});
+
+IssueAttachmentRouter.get('/details/:id', async (req, res) => {
+    const client = await db.client();
+    try {
+
+        const getIssueAttachment_Q_values = [req.params.id];
+        const getIssueAttachment_Q = `select * from issue_attachment where issue_attachment_id=$1`;
+        const getIssueAttachment_R = await client.query(getIssueAttachment_Q, getIssueAttachment_Q_values);
+
+        ResponseUtil.setResponse(200, ResponseFlag.OK, {fileDetails: getIssueAttachment_R.rows.length !== 0 ? getIssueAttachment_R.rows[0] : {}});
+        ResponseUtil.responds(res);
+    } catch (e) {
+        console.log('e', e);
+        ResponseUtil.setResponse(500, ResponseFlag.STORAGE_API_ERROR, `Storage Error: ${e.message}.`);
+        ResponseUtil.responds(res);
+    }
+});
+
+IssueAttachmentRouter.get('/details/issues/:issueId', async (req, res) => {
+    const client = await db.client();
+
+    const paginator = new Paginator(req.query.limit, req.query.offset);
+    try {
+        const getIssueAttachment_Q_values = [req.params.issueId,paginator.limit, paginator.offset];
+        const getIssueAttachment_Q = `select * from issue_attachment where issue_id=$1 limit $2 offset $3`;
+        const getIssueAttachment_R = await client.query(getIssueAttachment_Q, getIssueAttachment_Q_values);
+
+        const getCount_Q = `select COUNT(*) from issue_attachment where issue_id=$1`;
+        const getCount_R = await client.query(getCount_Q, [getIssueAttachment_Q_values[0]]);
+
+        const total_count = parseInt(getCount_R.rows[0].count);
+        const has_more = paginator.get_hasMore(total_count);
+
+        ResponseUtil.setResponse(200, ResponseFlag.OK, {fileDetails: getIssueAttachment_R.rows, total_count, has_more});
+        ResponseUtil.responds(res);
+    } catch (e) {
+        console.log('e', e);
+        ResponseUtil.setResponse(500, ResponseFlag.STORAGE_API_ERROR, `Storage Error: ${e.message}.`);
+        ResponseUtil.responds(res);
+    }
+});
 
 export default IssueAttachmentRouter;
