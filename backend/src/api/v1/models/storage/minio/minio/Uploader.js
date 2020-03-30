@@ -25,6 +25,6 @@ export default class Uploader {
         //step 4
         await this.formidableModel.delete_temp_file(file.path);
         //step 5
-        return await this.minioModel.get_object(bucket, `${bucket_path}/${file.name}`);
+        return await this.minioModel.get_object(bucket, `${bucket_path}/${file.name}`,`${file.name}`, file.type, file.size);
     }
 }

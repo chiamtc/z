@@ -23,7 +23,7 @@ export default class MinioModel {
         return await rb(bucket_name);
     }
 
-    async bucket_exists(bucket_name){
+    async bucket_exists(bucket_name) {
         const be = this.minio_promise.bucketExists();
         return await be(bucket_name);
     }
@@ -36,8 +36,12 @@ export default class MinioModel {
         return await po(bucket, `${bucket_path_file_name}`, fileStream, stat.size);
     }
 
-    async get_object(bucket, file_name){
-        return await this.minio_promise.getObject(bucket, file_name);
+    async get_object(bucket, file_path, file_name, mime_type, file_size) {
+        return await this.minio_promise.getObject(bucket, file_path, file_name, mime_type,file_size);
+    }
+
+    async remove_object(bucket, file_name) {
+        return await this.minio_promise.removeObject(bucket, file_name)
     }
 }
 /*

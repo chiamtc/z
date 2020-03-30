@@ -118,16 +118,5 @@ CommentRouter.get('/issues/:issueId', async (req, res) => {
     }
 });
 
-CommentRouter.post('/upload/:id', Comment_Middleware.get_bucket_subpath_name, async(req,res)=>{
-    try {
-        const uploader  = new Uploader();
-        const buffer = await uploader.uploads('comments',req);
-        res.status(200).send(buffer);
-    } catch (e) {
-        console.log('e', e);
-        ResponseUtil.setResponse(500, ResponseFlag.STORAGE_API_ERROR, `Storage Error: ${e.message}.`);
-        ResponseUtil.responds(res);
-    }
-});
 
 export default CommentRouter;

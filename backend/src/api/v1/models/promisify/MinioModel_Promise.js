@@ -26,15 +26,20 @@ export default class MinioModel_Promise {
         return util.promisify((bucket_name, file_name, file_stream, file_size, cb) => minio_client.putObject(bucket_name, file_name, file_stream, file_size, (err, etag) => cb(err, etag)));
     }
 
-    getObject(bucket, file_name) {
+    getObject(bucket, file_path, file_name, mime_type, file_size) {
         return new Promise((resolve, reject) => {
             let data;
-            minio_client.getObject(bucket, file_name, (err, dataStream) => {
+            console.log(bucket, file_path);
+            minio_client.getObject(bucket, file_path, (err, dataStream) => {
                 if (err) reject(err);
                 dataStream.on('data', (chunk) => data = !data ? Buffer.from(chunk) : Buffer.concat([data, chunk]));
-                dataStream.on('end', () => resolve(data));
+                dataStream.on('end', () => resolve({file_path, file_name, mime_type, file_size, buffer: data}));
                 dataStream.on('error', (err) => reject(err))
             });
         });
+    }
+
+    removeObject() {
+        return util.promisify((bucket_name, file_name, cb) => minio_client.removeObject(bucket_name, file_name, (err) => cb(err)));
     }
 }

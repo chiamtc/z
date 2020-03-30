@@ -25,24 +25,4 @@ export default class CommentMiddleware {
             await client.release();
         }
     }
-
-    async get_bucket_subpath_name(req, res, next) {
-        const client = await db.client();
-        const {id} = req.params;
-        try {
-            const getBucket_Q_values = [id];
-            const getBucket_Q = `select project_id from project where project_id = (select project_id from issue where issue_id = (select issue_id from comment where comment_id=$1));`;
-            const getBucket_R = await client.query(getBucket_Q, getBucket_Q_values);
-
-            if (getBucket_R.rows.length !== 0) {
-                req.bucket_path = getBucket_R.rows[0].project_id;
-                next();
-            } else throw new ErrorHandler(500, ResponseFlag.OBJECT_NOT_FOUND, 'No such project id exists');
-        } catch (e) {
-            console.log(e);
-            ResponseUtil.setResponse(500, ResponseFlag.OBJECT_NOT_FOUND, `Storage Error: ${e.message}.`);
-            ResponseUtil.responds(res);
-        }
-
-    }
 }

@@ -28,12 +28,14 @@
 -- select p.first_name, p.last_name ,c.* from person p right join comment c on p.person_id = c.person_id where c.issue_id=2;
 -- insert into comment(person_id, issue_id, content, edited) values(1, 1, 'new content', false);
 -- delete from issue where issue_id=1;
--- drop function update_timestamp();
--- drop table comment; drop table participant_issue; drop table issue_history; drop table issue; drop table sprint; drop table project_participant; drop table project; drop table person; drop table auth_user;
--- drop table participant_issue;  drop table issue; drop table issue_history; drop table sprint; drop table project_participant; drop table project; drop table person; drop table auth_user;
+
+------ delete all starts
+-- drop table role; drop table permission; drop table time_tracking_history; drop table time_tracking; drop table comment_history;drop table comment; drop table participant_issue; drop table issue_history; drop table issue; drop table sprint; drop table project_participant; drop table project; drop table person; drop table auth_user;
 -- drop type comment_history_action_enum; drop type issue_history_action_enum; drop type issue_priority_enum; drop type issue_status_enum; drop type issue_type_enum; drop type participant_type_enum; drop type project_type_enum;
 -- drop function update_timestamp();
 -- drop table migrations;
+------ delete all ends
+
 -- drop type issue_history_action_enum; drop type issue_priority_enum; drop type issue_status_enum; drop type issue_type_enum; drop type participant_type_enum;
 -- select * from issue_history order by created_date desc;
 -- insert into issue_history (issue_id, person_id, issue_history_action, new_content, old_content, updated_content_type) values(1,1,'updated', 'new task name', 'deserunt et sequi','issue_name' )
@@ -51,5 +53,18 @@
 --                         end
 -- where issue_id =2 returning *;
 
-select * from time_tracking;
+-- select * from time_tracking;
 -- delete from time_tracking where time_tracking_id =2;
+-- drop table migrations;
+
+-- insert into role(role_name, description, project_id, grants) values('pr','asd',1, ARRAY['auth_user','person','project']::grants_enum[]);
+-- select * from role ;
+-- select project_id || '_' || project_name as bucket_name from project where project_id = 
+-- 	(select project_id from issue where issue_id = 
+-- 	 	(select issue_id from comment where comment_id=1)
+-- 	);
+-- select project_id from project where project_id = (select project_id from issue where issue_id = 2);
+-- delete from comment_attachment where comment_id=1;
+select * from issue_attachment;
+
+
