@@ -25,7 +25,7 @@ CommentAttachmentRouter.post('/:commentId', CommentAttachment_Middleware.get_buc
         const createCommentAttachment_R = await client.query(createCommentAttachment_Q, createCommentAttachment_Q_values);
         await client.query('commit');
 
-        ResponseUtil.setResponse(200, ResponseFlag.OK, {file: createCommentAttachment_R.rows[0], buffer});
+        ResponseUtil.setResponse(200, ResponseFlag.OK, {file: createCommentAttachment_R.rows[0]});
         ResponseUtil.responds(res);
     } catch (e) {
         await client.query('rollback');
@@ -71,9 +71,9 @@ CommentAttachmentRouter.get('/files/:id', async (req, res) => {
             const {file_path, file_name, mime_type, file_size} = getCommentAttachment_R.rows[0];
             const minioModel = new MinioModel();
             const {buffer} = await minioModel.get_object("comments", file_path, file_name, mime_type, file_size);
-            ResponseUtil.setResponse(200, ResponseFlag.OK, {file: {...getCommentAttachment_R.rows[0]}, buffer});
-        } else ResponseUtil.setResponse(200, ResponseFlag.OK, {file: {}});
-        ResponseUtil.responds(res);
+            ResponseUtil.setResponse(200, mime_type, buffer);
+        } else ResponseUtil.setResponse(200, ResponseFlag.OK, {});
+        ResponseUtil.respondsWithBuffer(res);
     } catch (e) {
         console.log('e', e);
         ResponseUtil.setResponse(500, ResponseFlag.STORAGE_API_ERROR, `Storage Error: ${e.message}.`);
@@ -103,7 +103,7 @@ CommentAttachmentRouter.get('/details/comments/:commentId', async (req, res) => 
 
     const paginator = new Paginator(req.query.limit, req.query.offset);
     try {
-        const getCommentAttachment_Q_values = [req.params.commentId,paginator.limit, paginator.offset];
+        const getCommentAttachment_Q_values = [req.params.commentId, paginator.limit, paginator.offset];
         const getCommentAttachment_Q = `select * from comment_attachment where comment_id=$1 limit $2 offset $3`;
         const getCommentAttachment_R = await client.query(getCommentAttachment_Q, getCommentAttachment_Q_values);
 
@@ -113,7 +113,11 @@ CommentAttachmentRouter.get('/details/comments/:commentId', async (req, res) => 
         const total_count = parseInt(getCount_R.rows[0].count);
         const has_more = paginator.get_hasMore(total_count);
 
-        ResponseUtil.setResponse(200, ResponseFlag.OK, {fileDetails: getCommentAttachment_R.rows, total_count, has_more});
+        ResponseUtil.setResponse(200, ResponseFlag.OK, {
+            fileDetails: getCommentAttachment_R.rows,
+            total_count,
+            has_more
+        });
         ResponseUtil.responds(res);
     } catch (e) {
         console.log('e', e);

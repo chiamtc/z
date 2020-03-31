@@ -7,7 +7,6 @@ import db from "../../../../db";
 import Sanitizer from "../../../../utils/Sanitizer";
 import MinioModel from "../../models/storage/minio/minio/MinioModel";
 import HttpRequest from "../../../../utils/HttpRequest";
-import CommentAttachmentRouter from "../comment_attachment";
 import Paginator from "../../../../utils/Paginator";
 
 const IssueAttachmentRouter = Router();
@@ -29,7 +28,7 @@ IssueAttachmentRouter.post('/:issueId', IssueAttachment_Middleware.get_bucket_su
         await client.query('commit');
 
         RequestUtil.append_request(req, {client, rows: createIssueAttachment_R.rows});
-        ResponseUtil.setResponse(200, ResponseFlag.OK, {file: createIssueAttachment_R.rows[0], buffer});
+        ResponseUtil.setResponse(200, ResponseFlag.OK, {file: createIssueAttachment_R.rows[0]});
         ResponseUtil.responds(res);
         next();
     } catch (e) {
@@ -49,7 +48,6 @@ IssueAttachmentRouter.delete('/:id', IssueAttachment_Middleware.get_bucket_subpa
 
         await client.query('begin');
         const deleteCommentAttachment_Q_values = [req.params.id];
-        console.log(deleteCommentAttachment_Q_values)
         const deleteCommentAttachment_Q = `delete from issue_attachment where issue_attachment_id=$1 returning *`;
         const deleteCommentAttachment_R = await client.query(deleteCommentAttachment_Q, deleteCommentAttachment_Q_values);
         await client.query('commit');
@@ -76,9 +74,9 @@ IssueAttachmentRouter.get('/files/:id', async (req, res) => {
             const {file_path, file_name, mime_type, file_size} = getIssueAttachment_R.rows[0];
             const minioModel = new MinioModel();
             const {buffer} = await minioModel.get_object("issues", file_path, file_name, mime_type, file_size);
-            ResponseUtil.setResponse(200, ResponseFlag.OK, {file: {...getIssueAttachment_R.rows[0]}, buffer});
-        } else ResponseUtil.setResponse(200, ResponseFlag.OK, {file: {}});
-        ResponseUtil.responds(res);
+            ResponseUtil.setResponse(200, mime_type, buffer);
+        } else ResponseUtil.setResponse(200, ResponseFlag.OK, {});
+        ResponseUtil.respondsWithBuffer(res);
     } catch (e) {
         console.log('e', e);
         ResponseUtil.setResponse(500, ResponseFlag.STORAGE_API_ERROR, `Storage Error: ${e.message}.`);

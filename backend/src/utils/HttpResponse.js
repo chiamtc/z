@@ -16,6 +16,10 @@ export default class HttpResponse {
         if (this.type.toLowerCase().includes('error')) res.status(payload.status).json({...payload, message: this.data})
         else res.status(payload.status).json({...payload, data: this.data});
     }
+
+    respondsWithBuffer(res){
+        res.status(this.statusCode).contentType(this.type).send(this.data);
+    }
 }
 
 /*
