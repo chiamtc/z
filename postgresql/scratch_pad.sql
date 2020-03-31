@@ -65,7 +65,7 @@
 -- 	);
 -- select project_id from project where project_id = (select project_id from issue where issue_id = 2);
 -- delete from comment_attachment where comment_id=1;
+-- delete from issue_attachment where issue_id=2;
 select * from issue_attachment;
-
 
 

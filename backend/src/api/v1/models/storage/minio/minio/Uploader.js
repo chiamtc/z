@@ -17,12 +17,11 @@ export default class Uploader {
 
     async uploads(bucket,req) {
         //step 1 & 2
-        const {files} = await this.formidableModel.parse()(req);
+        const file =req.file;
         const {bucket_path} = req;
-        const file = files[Object.keys(files)];
         //step 3
-        await this.minioModel.upload_file(bucket, `${bucket_path}/${file.name}`, file.path);
-        //step 4
+        const a = await this.minioModel.upload_file(bucket, `${bucket_path}/${file.name}`, file.path);
+        // step 4
         await this.formidableModel.delete_temp_file(file.path);
         //step 5
         return await this.minioModel.get_object(bucket, `${bucket_path}/${file.name}`,`${file.name}`, file.type, file.size);

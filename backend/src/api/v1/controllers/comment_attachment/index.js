@@ -7,16 +7,18 @@ import MinioModel from "../../models/storage/minio/minio/MinioModel";
 import db from "../../../../db";
 import Sanitizer from "../../../../utils/Sanitizer";
 import Paginator from "../../../../utils/Paginator";
+import FileChecker from "../../middlewares/storage/minio/minio";
 
 const CommentAttachmentRouter = Router();
 const ResponseUtil = new HttpResponse();
 const CommentAttachment_Middleware = new CommentAttachmentMiddleware();
+const FileChecker_Middleware = new FileChecker();
 
-CommentAttachmentRouter.post('/:commentId', CommentAttachment_Middleware.get_bucket_subpath_name_based_on_comment, async (req, res, next) => {
+CommentAttachmentRouter.post('/:commentId', FileChecker_Middleware.check_file_size, CommentAttachment_Middleware.get_bucket_subpath_name_based_on_comment, async (req, res, next) => {
     const client = await db.client();
     try {
         const uploader = new Uploader();
-        const {buffer, file_path, file_name, mime_type, file_size} = await uploader.uploads('comments', req);
+        const {file_path, file_name, mime_type, file_size} = await uploader.uploads('comments', req);
 
         const SanitizerUtil = new Sanitizer();
         await client.query('begin');

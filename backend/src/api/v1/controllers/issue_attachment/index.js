@@ -8,17 +8,18 @@ import Sanitizer from "../../../../utils/Sanitizer";
 import MinioModel from "../../models/storage/minio/minio/MinioModel";
 import HttpRequest from "../../../../utils/HttpRequest";
 import Paginator from "../../../../utils/Paginator";
+import FileChecker from "../../middlewares/storage/minio/minio";
 
 const IssueAttachmentRouter = Router();
 const ResponseUtil = new HttpResponse();
 const RequestUtil = new HttpRequest();
 const IssueAttachment_Middleware = new IssueAttachmentMiddleware();
-
-IssueAttachmentRouter.post('/:issueId', IssueAttachment_Middleware.get_bucket_subpath_name_based_on_comment, async (req, res, next) => {
+const FileChecker_Middleware = new FileChecker();
+IssueAttachmentRouter.post('/:issueId', FileChecker_Middleware.check_file_size, IssueAttachment_Middleware.get_bucket_subpath_name_based_on_comment, async (req, res, next) => {
     const client = await db.client();
     try {
         const uploader = new Uploader();
-        const {buffer, file_path, file_name, mime_type, file_size} = await uploader.uploads('issues', req);
+        const {file_path, file_name, mime_type, file_size} = await uploader.uploads('issues', req);
 
         const SanitizerUtil = new Sanitizer();
         await client.query('begin');
@@ -37,7 +38,7 @@ IssueAttachmentRouter.post('/:issueId', IssueAttachment_Middleware.get_bucket_su
         ResponseUtil.setResponse(500, ResponseFlag.STORAGE_API_ERROR, `Storage Error: ${e.message}.`);
         ResponseUtil.responds(res);
     }
-},IssueAttachment_Middleware.log_post_issue_attachment_middleware);
+}, IssueAttachment_Middleware.log_post_issue_attachment_middleware);
 
 IssueAttachmentRouter.delete('/:id', IssueAttachment_Middleware.get_bucket_subpath_name_based_on_comment_attachment, async (req, res, next) => {
     const client = await db.client();
@@ -106,7 +107,7 @@ IssueAttachmentRouter.get('/details/issues/:issueId', async (req, res) => {
 
     const paginator = new Paginator(req.query.limit, req.query.offset);
     try {
-        const getIssueAttachment_Q_values = [req.params.issueId,paginator.limit, paginator.offset];
+        const getIssueAttachment_Q_values = [req.params.issueId, paginator.limit, paginator.offset];
         const getIssueAttachment_Q = `select * from issue_attachment where issue_id=$1 limit $2 offset $3`;
         const getIssueAttachment_R = await client.query(getIssueAttachment_Q, getIssueAttachment_Q_values);
 
